@@ -12,6 +12,7 @@ Live URL after GitHub Pages is enabled:
 - Notices, events, contacts, and gallery load from CSV files.
 - The CSV files can be replaced with published Google Sheet CSV links.
 - Contact form can save messages into Google Sheets through Apps Script.
+- Social network page has register/login, posts, likes, comments, member list, profile editing, and entertainment prompts.
 - AdSense placeholders are ready, but disabled until you add your publisher ID.
 
 ## Google Sheet Database Setup
@@ -52,7 +53,20 @@ The admin panel is available at `/admin.html`. It is not linked from the public 
 4. Open `/admin.html`.
 5. Paste the Apps Script Web App URL and the private admin token.
 
-Admin can list, add, edit, hide, and delete rows in `notices`, `events`, `directory`, `gallery`, and `users`. Messages are read-only. Keep the `users` sheet private; do not publish it as a public CSV.
+Admin can list, add, edit, hide, and delete rows in `notices`, `events`, `directory`, `gallery`, `users`, `socialPosts`, `socialComments`, `socialReactions`, and `sessions`. Messages are read-only. Keep the social sheets private; do not publish them as public CSV files.
+
+## Social Network Login
+
+The social page is available at `/social.html`.
+
+It works immediately in demo mode on each browser. For a shared village network:
+
+1. Deploy `google-apps-script.gs` as the Apps Script Web App.
+2. Copy the Web App URL into both `formEndpoint` and `socialEndpoint` in `config.js`.
+3. Re-upload `config.js` to GitHub Pages.
+4. Keep the `users`, `sessions`, `socialPosts`, `socialComments`, and `socialReactions` sheets private.
+
+Passwords are saved as client-side hashes, not plain text. This is a simple village community login, not bank-grade authentication.
 
 ## AdSense Setup
 
