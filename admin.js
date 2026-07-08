@@ -74,12 +74,69 @@
       rowName: "profile",
       editable: true,
       fields: [
+        "userId",
         "name",
         "phone",
+        "passwordHash",
         "email",
         "role",
         "village",
-        "notes",
+        "profession",
+        "bio",
+        "createdAt",
+        "lastLogin",
+        "status"
+      ]
+    },
+    socialPosts: {
+      title: "Social Posts",
+      rowName: "post",
+      editable: true,
+      fields: [
+        "postId",
+        "userId",
+        "content",
+        "category",
+        "mediaUrl",
+        "createdAt",
+        "status"
+      ]
+    },
+    socialComments: {
+      title: "Comments",
+      rowName: "comment",
+      editable: true,
+      fields: [
+        "commentId",
+        "postId",
+        "userId",
+        "content",
+        "createdAt",
+        "status"
+      ]
+    },
+    socialReactions: {
+      title: "Reactions",
+      rowName: "reaction",
+      editable: true,
+      fields: [
+        "reactionId",
+        "postId",
+        "userId",
+        "type",
+        "createdAt",
+        "status"
+      ]
+    },
+    sessions: {
+      title: "Sessions",
+      rowName: "session",
+      editable: true,
+      fields: [
+        "sessionToken",
+        "userId",
+        "createdAt",
+        "lastSeen",
         "status"
       ]
     },
@@ -128,6 +185,20 @@
     email: "Email",
     role: "Role",
     village: "Village",
+    profession: "Profession",
+    bio: "Bio",
+    userId: "User ID",
+    passwordHash: "Password hash",
+    createdAt: "Created at",
+    lastLogin: "Last login",
+    postId: "Post ID",
+    content: "Content",
+    mediaUrl: "Media URL",
+    commentId: "Comment ID",
+    reactionId: "Reaction ID",
+    type: "Type",
+    sessionToken: "Session token",
+    lastSeen: "Last seen",
     notes: "Notes"
   };
 
@@ -254,27 +325,59 @@
   }
 
   async function api(action, payload) {
-    try {
-      const body = new URLSearchParams();
-      body.set("payload", JSON.stringify({
-        action,
-        token: state.token,
-        ...payload
-      }));
+    return jsonpRequest({
+      action,
+      token: state.token,
+      ...payload
+    });
+  }
 
-      const response = await fetch(state.endpoint, {
-        method: "POST",
-        body
-      });
+  function jsonpRequest(payload) {
+    return new Promise((resolve) => {
+      let url;
+      try {
+        url = new URL(state.endpoint);
+      } catch (error) {
+        resolve({
+          ok: false,
+          error: "Apps Script URL is not valid."
+        });
+        return;
+      }
 
-      const text = await response.text();
-      return JSON.parse(text);
-    } catch (error) {
-      return {
-        ok: false,
-        error: "Request failed. Check the Apps Script URL, deployment access, and token."
+      const callbackName = "gramAdminCallback_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+      const script = document.createElement("script");
+      const timeout = setTimeout(() => {
+        cleanup();
+        resolve({
+          ok: false,
+          error: "Request failed. Check the Apps Script URL, deployment access, and token."
+        });
+      }, 15000);
+
+      window[callbackName] = (result) => {
+        cleanup();
+        resolve(result || { ok: false, error: "Empty response." });
       };
-    }
+
+      function cleanup() {
+        clearTimeout(timeout);
+        delete window[callbackName];
+        script.remove();
+      }
+
+      url.searchParams.set("callback", callbackName);
+      url.searchParams.set("payload", JSON.stringify(payload));
+      script.src = url.toString();
+      script.onerror = () => {
+        cleanup();
+        resolve({
+          ok: false,
+          error: "Apps Script could not be loaded."
+        });
+      };
+      document.body.appendChild(script);
+    });
   }
 
   function requireSettings() {
