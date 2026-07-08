@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Gram Kapoorpur">
+  <rect width="64" height="64" rx="14" fill="#155e45"/>
+  <path d="M13 35 32 18l19 17v17a2 2 0 0 1-2 2H15a2 2 0 0 1-2-2V35Z" fill="#fff8ea"/>
+  <path d="M24 54V39h16v15" fill="#b85c1d"/>
+  <path d="M32 18 8 39l3 4 21-18 21 18 3-4-24-21Z" fill="#ffd59c"/>
+</svg>
