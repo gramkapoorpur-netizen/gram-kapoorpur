@@ -24,7 +24,27 @@ const SHEETS = {
   users: {
     name: "users",
     editable: true,
-    headers: ["name", "phone", "email", "role", "village", "notes", "status"]
+    headers: ["userId", "name", "phone", "passwordHash", "email", "role", "village", "profession", "bio", "createdAt", "lastLogin", "status"]
+  },
+  socialPosts: {
+    name: "socialPosts",
+    editable: true,
+    headers: ["postId", "userId", "content", "category", "mediaUrl", "createdAt", "status"]
+  },
+  socialComments: {
+    name: "socialComments",
+    editable: true,
+    headers: ["commentId", "postId", "userId", "content", "createdAt", "status"]
+  },
+  socialReactions: {
+    name: "socialReactions",
+    editable: true,
+    headers: ["reactionId", "postId", "userId", "type", "createdAt", "status"]
+  },
+  sessions: {
+    name: "sessions",
+    editable: true,
+    headers: ["sessionToken", "userId", "createdAt", "lastSeen", "status"]
   },
   messages: {
     name: "Messages",
@@ -35,19 +55,20 @@ const SHEETS = {
 
 function doPost(e) {
   const data = parseBody_(e);
-
-  if (data.action && String(data.action).indexOf("admin_") === 0) {
-    return handleAdmin_(data);
-  }
-
-  return savePublicMessage_(data);
+  return route_(data);
 }
 
-function doGet() {
-  return json_({
-    ok: true,
-    message: "Gram Kapoorpur endpoint is active."
-  });
+function doGet(e) {
+  const data = parseBody_(e);
+
+  if (!data.action) {
+    return respond_({
+      ok: true,
+      message: "Gram Kapoorpur endpoint is active."
+    }, e);
+  }
+
+  return route_(data, e);
 }
 
 function setupAdminToken() {
@@ -57,50 +78,336 @@ function setupAdminToken() {
   );
 }
 
-function handleAdmin_(data) {
-  if (!isAdminTokenValid_(data.token)) {
-    return json_({
-      ok: false,
-      error: "Invalid or missing admin token."
-    });
+function route_(data, e) {
+  if (data.action && String(data.action).indexOf("admin_") === 0) {
+    return handleAdmin_(data, e);
   }
 
+  if (data.action && String(data.action).indexOf("social_") === 0) {
+    return handleSocial_(data, e);
+  }
+
+  return savePublicMessage_(data, e);
+}
+
+function handleSocial_(data, e) {
   try {
-    if (data.action === "admin_list") {
-      return json_({
-        ok: true,
-        data: listSheets_(data.sheets || Object.keys(SHEETS))
-      });
+    if (data.action === "social_register") {
+      return respond_(socialRegister_(data), e);
     }
 
-    if (data.action === "admin_upsert") {
-      upsertRow_(data.sheet, data.rowNumber, data.values || {});
-      return json_({ ok: true });
+    if (data.action === "social_login") {
+      return respond_(socialLogin_(data), e);
     }
 
-    if (data.action === "admin_hide") {
-      hideRow_(data.sheet, data.rowNumber);
-      return json_({ ok: true });
+    const user = userFromSession_(data.token);
+    if (!user) {
+      return respond_({
+        ok: false,
+        error: "Session expired. Please login again."
+      }, e);
     }
 
-    if (data.action === "admin_delete") {
-      deleteRow_(data.sheet, data.rowNumber);
-      return json_({ ok: true });
+    if (data.action === "social_feed") {
+      touchSession_(data.token);
+      return respond_(socialResponse_(user, data.token), e);
     }
 
-    return json_({
+    if (data.action === "social_post") {
+      socialPost_(user, data);
+      return respond_(socialResponse_(user, data.token), e);
+    }
+
+    if (data.action === "social_comment") {
+      socialComment_(user, data);
+      return respond_(socialResponse_(user, data.token), e);
+    }
+
+    if (data.action === "social_react") {
+      socialReact_(user, data);
+      return respond_(socialResponse_(user, data.token), e);
+    }
+
+    if (data.action === "social_profile_update") {
+      const updatedUser = socialProfileUpdate_(user, data);
+      return respond_(socialResponse_(updatedUser, data.token), e);
+    }
+
+    return respond_({
       ok: false,
-      error: "Unknown admin action."
-    });
+      error: "Unknown social action."
+    }, e);
   } catch (error) {
-    return json_({
+    return respond_({
       ok: false,
       error: error.message
+    }, e);
+  }
+}
+
+function socialRegister_(data) {
+  const phone = cleanPhone_(data.phone);
+  const name = cleanText_(data.name, 80);
+  const passwordHash = cleanText_(data.passwordHash, 140);
+
+  if (!name) throw new Error("Name is required.");
+  if (phone.length < 10) throw new Error("Valid phone number is required.");
+  if (!passwordHash) throw new Error("Password is required.");
+
+  const usersSheet = ensureSheet_("users");
+  const users = readRows_("users").rows;
+  const existing = users.find(function (row) {
+    return cleanPhone_(row.object.phone) === phone && !isHidden_(row.object);
+  });
+
+  if (existing) throw new Error("This phone number already has an account.");
+
+  const now = new Date().toISOString();
+  const userId = "u_" + Utilities.getUuid();
+  appendObject_(usersSheet, SHEETS.users.headers, {
+    userId: userId,
+    name: name,
+    phone: phone,
+    passwordHash: passwordHash,
+    email: "",
+    role: "member",
+    village: cleanText_(data.village || "Kapoorpur", 80),
+    profession: cleanText_(data.profession, 80),
+    bio: "",
+    createdAt: now,
+    lastLogin: now,
+    status: ""
+  });
+
+  const user = getUserById_(userId);
+  const token = createSession_(userId);
+  return socialResponse_(user, token);
+}
+
+function socialLogin_(data) {
+  const phone = cleanPhone_(data.phone);
+  const passwordHash = cleanText_(data.passwordHash, 140);
+  const users = readRows_("users").rows;
+  const found = users.find(function (row) {
+    return cleanPhone_(row.object.phone) === phone &&
+      row.object.passwordHash === passwordHash &&
+      !isHidden_(row.object);
+  });
+
+  if (!found) throw new Error("Phone number or password is wrong.");
+
+  const usersSheet = ensureSheet_("users");
+  const headers = getHeaders_("users", usersSheet);
+  setCellByHeader_(usersSheet, found.rowNumber, headers, "lastLogin", new Date().toISOString());
+  const token = createSession_(found.object.userId);
+  return socialResponse_(found.object, token);
+}
+
+function socialPost_(user, data) {
+  const content = cleanText_(data.content, 700);
+  if (!content) throw new Error("Post cannot be empty.");
+
+  appendObject_(ensureSheet_("socialPosts"), SHEETS.socialPosts.headers, {
+    postId: "p_" + Utilities.getUuid(),
+    userId: user.userId,
+    content: content,
+    category: cleanText_(data.category || "update", 30),
+    mediaUrl: cleanText_(data.mediaUrl, 500),
+    createdAt: new Date().toISOString(),
+    status: ""
+  });
+}
+
+function socialComment_(user, data) {
+  const postId = cleanText_(data.postId, 80);
+  const content = cleanText_(data.content, 300);
+  if (!postId) throw new Error("Post is required.");
+  if (!content) throw new Error("Comment cannot be empty.");
+
+  appendObject_(ensureSheet_("socialComments"), SHEETS.socialComments.headers, {
+    commentId: "c_" + Utilities.getUuid(),
+    postId: postId,
+    userId: user.userId,
+    content: content,
+    createdAt: new Date().toISOString(),
+    status: ""
+  });
+}
+
+function socialReact_(user, data) {
+  const postId = cleanText_(data.postId, 80);
+  const type = cleanText_(data.type || "like", 30);
+  const sheet = ensureSheet_("socialReactions");
+  const reactions = readRows_("socialReactions").rows;
+  const existing = reactions.find(function (row) {
+    return row.object.postId === postId &&
+      row.object.userId === user.userId &&
+      row.object.type === type &&
+      !isHidden_(row.object);
+  });
+
+  if (existing) {
+    sheet.deleteRow(existing.rowNumber);
+  } else {
+    appendObject_(sheet, SHEETS.socialReactions.headers, {
+      reactionId: "r_" + Utilities.getUuid(),
+      postId: postId,
+      userId: user.userId,
+      type: type,
+      createdAt: new Date().toISOString(),
+      status: ""
     });
   }
 }
 
-function savePublicMessage_(data) {
+function socialProfileUpdate_(user, data) {
+  const usersSheet = ensureSheet_("users");
+  const headers = getHeaders_("users", usersSheet);
+  const rows = readRows_("users").rows;
+  const found = rows.find(function (row) {
+    return row.object.userId === user.userId && !isHidden_(row.object);
+  });
+
+  if (!found) throw new Error("User not found.");
+
+  setCellByHeader_(usersSheet, found.rowNumber, headers, "name", cleanText_(data.name || user.name, 80));
+  setCellByHeader_(usersSheet, found.rowNumber, headers, "village", cleanText_(data.village, 80));
+  setCellByHeader_(usersSheet, found.rowNumber, headers, "profession", cleanText_(data.profession, 80));
+  setCellByHeader_(usersSheet, found.rowNumber, headers, "bio", cleanText_(data.bio, 300));
+
+  return getUserById_(user.userId);
+}
+
+function socialResponse_(user, token) {
+  return {
+    ok: true,
+    token: token,
+    user: publicUser_(user),
+    data: socialSnapshot_()
+  };
+}
+
+function socialSnapshot_() {
+  return {
+    users: readRows_("users").rows
+      .map(function (row) { return row.object; })
+      .filter(function (user) { return !isHidden_(user); })
+      .map(publicUser_),
+    posts: readRows_("socialPosts").rows
+      .map(function (row) { return row.object; })
+      .filter(function (post) { return !isHidden_(post); }),
+    comments: readRows_("socialComments").rows
+      .map(function (row) { return row.object; })
+      .filter(function (comment) { return !isHidden_(comment); }),
+    reactions: readRows_("socialReactions").rows
+      .map(function (row) { return row.object; })
+      .filter(function (reaction) { return !isHidden_(reaction); })
+  };
+}
+
+function publicUser_(user) {
+  return {
+    userId: user.userId,
+    name: user.name,
+    village: user.village,
+    profession: user.profession,
+    bio: user.bio,
+    createdAt: user.createdAt,
+    status: user.status
+  };
+}
+
+function createSession_(userId) {
+  const now = new Date().toISOString();
+  const token = "s_" + Utilities.getUuid() + "_" + Utilities.getUuid();
+  appendObject_(ensureSheet_("sessions"), SHEETS.sessions.headers, {
+    sessionToken: token,
+    userId: userId,
+    createdAt: now,
+    lastSeen: now,
+    status: ""
+  });
+  return token;
+}
+
+function userFromSession_(token) {
+  const sessionToken = cleanText_(token, 180);
+  if (!sessionToken) return null;
+
+  const sessions = readRows_("sessions").rows;
+  const session = sessions.find(function (row) {
+    return row.object.sessionToken === sessionToken && !isHidden_(row.object);
+  });
+
+  if (!session) return null;
+  return getUserById_(session.object.userId);
+}
+
+function touchSession_(token) {
+  const sheet = ensureSheet_("sessions");
+  const headers = getHeaders_("sessions", sheet);
+  const sessions = readRows_("sessions").rows;
+  const session = sessions.find(function (row) {
+    return row.object.sessionToken === token;
+  });
+
+  if (session) {
+    setCellByHeader_(sheet, session.rowNumber, headers, "lastSeen", new Date().toISOString());
+  }
+}
+
+function getUserById_(userId) {
+  const users = readRows_("users").rows;
+  const found = users.find(function (row) {
+    return row.object.userId === userId && !isHidden_(row.object);
+  });
+  return found ? found.object : null;
+}
+
+function handleAdmin_(data, e) {
+  if (!isAdminTokenValid_(data.token)) {
+    return respond_({
+      ok: false,
+      error: "Invalid or missing admin token."
+    }, e);
+  }
+
+  try {
+    if (data.action === "admin_list") {
+      return respond_({
+        ok: true,
+        data: listSheets_(data.sheets || Object.keys(SHEETS))
+      }, e);
+    }
+
+    if (data.action === "admin_upsert") {
+      upsertRow_(data.sheet, data.rowNumber, data.values || {});
+      return respond_({ ok: true }, e);
+    }
+
+    if (data.action === "admin_hide") {
+      hideRow_(data.sheet, data.rowNumber);
+      return respond_({ ok: true }, e);
+    }
+
+    if (data.action === "admin_delete") {
+      deleteRow_(data.sheet, data.rowNumber);
+      return respond_({ ok: true }, e);
+    }
+
+    return respond_({
+      ok: false,
+      error: "Unknown admin action."
+    }, e);
+  } catch (error) {
+    return respond_({
+      ok: false,
+      error: error.message
+    }, e);
+  }
+}
+
+function savePublicMessage_(data, e) {
   const sheet = ensureSheet_("messages");
 
   sheet.appendRow([
@@ -114,7 +421,7 @@ function savePublicMessage_(data) {
     data.createdAt || ""
   ]);
 
-  return json_({ ok: true });
+  return respond_({ ok: true }, e);
 }
 
 function listSheets_(sheetKeys) {
@@ -122,14 +429,14 @@ function listSheets_(sheetKeys) {
 
   sheetKeys.forEach(function (sheetKey) {
     if (!SHEETS[sheetKey]) return;
-    const sheet = ensureSheet_(sheetKey);
-    result[sheetKey] = readSheet_(sheetKey, sheet);
+    result[sheetKey] = readRows_(sheetKey);
   });
 
   return result;
 }
 
-function readSheet_(sheetKey, sheet) {
+function readRows_(sheetKey) {
+  const sheet = ensureSheet_(sheetKey);
   const headers = getHeaders_(sheetKey, sheet);
   const lastRow = sheet.getLastRow();
   const rows = [];
@@ -238,6 +545,18 @@ function getHeaders_(sheetKey, sheet) {
   return headers;
 }
 
+function appendObject_(sheet, headers, object) {
+  sheet.appendRow(headers.map(function (header) {
+    return object[header] || "";
+  }));
+}
+
+function setCellByHeader_(sheet, rowNumber, headers, header, value) {
+  const index = headers.indexOf(header);
+  if (index === -1) return;
+  sheet.getRange(rowNumber, index + 1).setValue(value);
+}
+
 function ensureStatusColumn_(sheet, headers) {
   const currentIndex = headers.indexOf("status");
   if (currentIndex !== -1) return currentIndex + 1;
@@ -256,6 +575,19 @@ function getSheetSpec_(sheetKey) {
 function isAdminTokenValid_(token) {
   const savedToken = PropertiesService.getScriptProperties().getProperty(ADMIN_TOKEN_PROPERTY);
   return Boolean(savedToken) && String(token || "") === savedToken;
+}
+
+function isHidden_(object) {
+  const status = String(object.status || "").toLowerCase();
+  return status === "hidden" || status === "deleted";
+}
+
+function cleanPhone_(value) {
+  return String(value || "").replace(/[^\d]/g, "").slice(-10);
+}
+
+function cleanText_(value, maxLength) {
+  return String(value || "").trim().slice(0, maxLength || 500);
 }
 
 function parseBody_(e) {
@@ -280,8 +612,13 @@ function parseBody_(e) {
   return e.parameter || {};
 }
 
-function json_(object) {
+function respond_(object, e) {
+  const callback = e && e.parameter && e.parameter.callback;
+  const output = callback
+    ? String(callback).replace(/[^\w.$]/g, "") + "(" + JSON.stringify(object) + ");"
+    : JSON.stringify(object);
+
   return ContentService
-    .createTextOutput(JSON.stringify(object))
-    .setMimeType(ContentService.MimeType.JSON);
+    .createTextOutput(output)
+    .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
 }
