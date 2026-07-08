@@ -1,90 +1,61 @@
-# Gram Kapoorpur Website
+# Kapoorpur Social
 
-This is a lightweight static website for `ग्राम कपूरपुर / Gram Kapoorpur`.
+This site is now a social networking app for Gram Kapoorpur.
 
-Live URL after GitHub Pages is enabled:
+Live URL:
 `https://gramkapoorpur-netizen.github.io/gram-kapoorpur/`
 
-## What is included
+Direct app URL:
+`https://gramkapoorpur-netizen.github.io/gram-kapoorpur/social.html`
 
-- Hindi is the default language, with an English switch.
-- No framework, no build step, and no login system.
-- Notices, events, contacts, and gallery load from CSV files.
-- The CSV files can be replaced with published Google Sheet CSV links.
-- Contact form can save messages into Google Sheets through Apps Script.
-- Social network page has register/login, posts, likes, comments, member list, profile editing, and entertainment prompts.
-- AdSense placeholders are ready, but disabled until you add your publisher ID.
+## Features
 
-## Google Sheet Database Setup
+- Login and register
+- Forgot password with Recovery PIN
+- Feed posts
+- Like, comment, and share
+- Friend requests
+- Members search
+- Private-style messages
+- Notifications
+- Profile editing
+- Entertainment / fun prompts
+- Admin panel for removing users, posts, comments, messages, sessions, and friend links
 
-1. Create a Google Sheet with these tabs: `notices`, `events`, `directory`, `gallery`, `Messages`.
-2. Copy the headers from the files in the `data` folder into the matching Sheet tabs.
-3. In Google Sheets, go to `File > Share > Publish to web`.
-4. Publish each tab as `Comma-separated values (.csv)`.
-5. Copy each published CSV URL into `config.js` under `sheetSources`.
+## Shared Backend
 
-Example:
+GitHub Pages cannot store shared user accounts by itself. To make every villager see the same accounts, posts, comments, friends, and messages:
+
+1. Create a Google Sheet.
+2. Open `Extensions > Apps Script`.
+3. Paste `google-apps-script.gs`.
+4. Deploy it as a Web App with access set to `Anyone`.
+5. Copy the Web App URL into `config.js`:
 
 ```js
-sheetSources: {
-  notices: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=0&single=true&output=csv",
-  events: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=111&single=true&output=csv",
-  directory: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=222&single=true&output=csv",
-  gallery: "https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=333&single=true&output=csv"
-}
+formEndpoint: "YOUR_APPS_SCRIPT_WEB_APP_URL",
+socialEndpoint: "YOUR_APPS_SCRIPT_WEB_APP_URL",
 ```
 
-## Contact Form to Google Sheets
+6. Upload the changed `config.js` to GitHub Pages.
 
-1. Open the same Google Sheet.
-2. Go to `Extensions > Apps Script`.
-3. Paste the code from `google-apps-script.gs`.
-4. Deploy as a Web App.
-5. Set access to `Anyone`.
-6. Copy the Web App URL into `config.js` as `formEndpoint`.
+Passwords are stored as hashes, not plain text. This is suitable for a simple village community site, not high-security banking-style authentication.
 
 ## Admin Panel
 
-The admin panel is available at `/admin.html`. It is not linked from the public navigation and has `noindex`, but it must still be protected by the Apps Script token.
+Admin page:
+`/admin.html`
 
-1. In Apps Script, open `Project Settings`.
-2. Add a Script Property named `ADMIN_TOKEN`.
-3. Use a long private value, for example a random password of 24+ characters.
-4. Open `/admin.html`.
-5. Paste the Apps Script Web App URL and the private admin token.
+In Apps Script, set a Script Property named `ADMIN_TOKEN`, then use the same token in the admin panel.
 
-Admin can list, add, edit, hide, and delete rows in `notices`, `events`, `directory`, `gallery`, `users`, `socialPosts`, `socialComments`, `socialReactions`, and `sessions`. Messages are read-only. Keep the social sheets private; do not publish them as public CSV files.
+Keep these sheets private:
 
-## Social Network Login
+- `users`
+- `sessions`
+- `socialPosts`
+- `socialComments`
+- `socialReactions`
+- `socialFriends`
+- `socialMessages`
 
-The social page is available at `/social.html`.
-
-It works immediately on each browser. For a shared village network where every villager sees the same accounts and posts:
-
-1. Deploy `google-apps-script.gs` as the Apps Script Web App.
-2. Copy the Web App URL into both `formEndpoint` and `socialEndpoint` in `config.js`.
-3. Re-upload `config.js` to GitHub Pages.
-4. Keep the `users`, `sessions`, `socialPosts`, `socialComments`, and `socialReactions` sheets private.
-
-Passwords are saved as client-side hashes, not plain text. This is a simple village community login, not bank-grade authentication.
-
-## AdSense Setup
-
-After Google AdSense gives you a publisher ID and ad slot IDs, update `config.js`:
-
-```js
-adsenseClient: "ca-pub-0000000000000000",
-adSlots: {
-  top: "1111111111",
-  middle: "2222222222",
-  bottom: "3333333333"
-}
-```
-
-Then update `ads.txt` with the real publisher ID.
-
-## GitHub Pages
-
-Upload all files in this folder to a GitHub repository. In the repository settings, enable GitHub Pages from the main branch.
-
-Do not paste a GitHub token into chat. Use GitHub login, GitHub CLI, or a local environment variable when publishing.
+Do not publish those sheets as public CSV files.
