@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Admin | Gram Kapoorpur</title>
+  <title>Admin | Kapoorpur Social</title>
   <meta name="theme-color" content="#155e45">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="admin.css">
@@ -16,11 +16,11 @@
     <a class="brand" href="index.html">
       <span class="brand-mark">क</span>
       <span>
-        <strong>Gram Kapoorpur Admin</strong>
+        <strong>Kapoorpur Social Admin</strong>
         <small>Manoj Singh Sikarwar</small>
       </span>
     </a>
-    <a class="site-link" href="index.html">Website</a>
+    <a class="site-link" href="index.html">Open Social</a>
   </header>
 
   <main class="admin-shell">
@@ -28,7 +28,7 @@
       <div>
         <p class="eyebrow">Secure access</p>
         <h1 id="setupTitle">Admin Panel</h1>
-      <p class="muted">Use this page to update notices, events, contacts, gallery items, social posts, messages, and user/profile records stored in your private Google Sheet.</p>
+      <p class="muted">Use this page to manage users, profiles, posts, comments, likes, friend links, messages, and sessions stored in your private Google Sheet.</p>
       </div>
 
       <form id="settingsForm" class="settings-grid">
@@ -50,10 +50,10 @@
     </section>
 
     <section class="stats-grid" aria-label="Admin summary">
-      <article><span>Notices</span><strong id="statNotices">0</strong></article>
-      <article><span>Events</span><strong id="statEvents">0</strong></article>
-      <article><span>Contacts</span><strong id="statDirectory">0</strong></article>
       <article><span>Users</span><strong id="statUsers">0</strong></article>
+      <article><span>Posts</span><strong id="statPosts">0</strong></article>
+      <article><span>Comments</span><strong id="statComments">0</strong></article>
+      <article><span>Messages</span><strong id="statMessages">0</strong></article>
     </section>
 
     <section class="panel">
@@ -93,8 +93,8 @@
 
     <section class="panel help-panel">
       <h2>Important</h2>
-      <p>This admin page is safe for GitHub Pages because the secret token is not stored in the website files. Keep the token private and rotate it if it is shared by mistake.</p>
-      <p>User/profile data should stay in the private Google Sheet. Do not publish the users, sessions, posts, comments, or reactions sheets as public CSV files.</p>
+      <p>This admin page is safe for GitHub Pages because the secret token is not stored in the public files. Keep the token private and rotate it if it is shared by mistake.</p>
+      <p>User/profile data should stay in the private Google Sheet. Do not publish the users, sessions, posts, comments, reactions, friends, or messages sheets as public CSV files.</p>
     </section>
   </main>
 </body>
