@@ -1,30 +1,10 @@
 const ADMIN_TOKEN_PROPERTY = "ADMIN_TOKEN";
 
 const SHEETS = {
-  notices: {
-    name: "notices",
-    editable: true,
-    headers: ["title_hi", "title_en", "body_hi", "body_en", "date", "type_hi", "type_en", "important", "status"]
-  },
-  events: {
-    name: "events",
-    editable: true,
-    headers: ["title_hi", "title_en", "date", "time", "place_hi", "place_en", "details_hi", "details_en", "status"]
-  },
-  directory: {
-    name: "directory",
-    editable: true,
-    headers: ["name_hi", "name_en", "role_hi", "role_en", "phone", "category", "status"]
-  },
-  gallery: {
-    name: "gallery",
-    editable: true,
-    headers: ["title_hi", "title_en", "image", "caption_hi", "caption_en", "status"]
-  },
   users: {
     name: "users",
     editable: true,
-    headers: ["userId", "name", "phone", "passwordHash", "email", "role", "village", "profession", "bio", "createdAt", "lastLogin", "status"]
+    headers: ["userId", "name", "phone", "passwordHash", "recoveryHash", "email", "role", "village", "profession", "bio", "createdAt", "lastLogin", "status"]
   },
   socialPosts: {
     name: "socialPosts",
@@ -41,15 +21,20 @@ const SHEETS = {
     editable: true,
     headers: ["reactionId", "postId", "userId", "type", "createdAt", "status"]
   },
+  socialFriends: {
+    name: "socialFriends",
+    editable: true,
+    headers: ["friendId", "requesterId", "addresseeId", "status", "createdAt", "updatedAt"]
+  },
+  socialMessages: {
+    name: "socialMessages",
+    editable: true,
+    headers: ["messageId", "fromUserId", "toUserId", "content", "createdAt", "status"]
+  },
   sessions: {
     name: "sessions",
     editable: true,
     headers: ["sessionToken", "userId", "createdAt", "lastSeen", "status"]
-  },
-  messages: {
-    name: "Messages",
-    editable: false,
-    headers: ["Received At", "Name", "Phone", "Topic", "Message", "Language", "Page", "Created At"]
   }
 };
 
@@ -87,7 +72,10 @@ function route_(data, e) {
     return handleSocial_(data, e);
   }
 
-  return savePublicMessage_(data, e);
+  return respond_({
+    ok: false,
+    error: "Unknown action."
+  }, e);
 }
 
 function handleSocial_(data, e) {
@@ -98,6 +86,10 @@ function handleSocial_(data, e) {
 
     if (data.action === "social_login") {
       return respond_(socialLogin_(data), e);
+    }
+
+    if (data.action === "social_reset_password") {
+      return respond_(socialResetPassword_(data), e);
     }
 
     const user = userFromSession_(data.token);
@@ -128,6 +120,26 @@ function handleSocial_(data, e) {
       return respond_(socialResponse_(user, data.token), e);
     }
 
+    if (data.action === "social_share") {
+      socialShare_(user, data);
+      return respond_(socialResponse_(user, data.token), e);
+    }
+
+    if (data.action === "social_friend_request") {
+      socialFriendRequest_(user, data);
+      return respond_(socialResponse_(user, data.token), e);
+    }
+
+    if (data.action === "social_friend_respond") {
+      socialFriendRespond_(user, data);
+      return respond_(socialResponse_(user, data.token), e);
+    }
+
+    if (data.action === "social_message") {
+      socialMessage_(user, data);
+      return respond_(socialResponse_(user, data.token), e);
+    }
+
     if (data.action === "social_profile_update") {
       const updatedUser = socialProfileUpdate_(user, data);
       return respond_(socialResponse_(updatedUser, data.token), e);
@@ -149,10 +161,12 @@ function socialRegister_(data) {
   const phone = cleanPhone_(data.phone);
   const name = cleanText_(data.name, 80);
   const passwordHash = cleanText_(data.passwordHash, 140);
+  const recoveryHash = cleanText_(data.recoveryHash, 140);
 
   if (!name) throw new Error("Name is required.");
   if (phone.length < 10) throw new Error("Valid phone number is required.");
   if (!passwordHash) throw new Error("Password is required.");
+  if (!recoveryHash) throw new Error("Recovery PIN is required.");
 
   const usersSheet = ensureSheet_("users");
   const users = readRows_("users").rows;
@@ -169,6 +183,7 @@ function socialRegister_(data) {
     name: name,
     phone: phone,
     passwordHash: passwordHash,
+    recoveryHash: recoveryHash,
     email: "",
     role: "member",
     village: cleanText_(data.village || "Kapoorpur", 80),
@@ -201,6 +216,26 @@ function socialLogin_(data) {
   setCellByHeader_(usersSheet, found.rowNumber, headers, "lastLogin", new Date().toISOString());
   const token = createSession_(found.object.userId);
   return socialResponse_(found.object, token);
+}
+
+function socialResetPassword_(data) {
+  const phone = cleanPhone_(data.phone);
+  const recoveryHash = cleanText_(data.recoveryHash, 140);
+  const passwordHash = cleanText_(data.passwordHash, 140);
+  const rows = readRows_("users").rows;
+  const found = rows.find(function (row) {
+    return cleanPhone_(row.object.phone) === phone &&
+      row.object.recoveryHash === recoveryHash &&
+      !isHidden_(row.object);
+  });
+
+  if (!found) throw new Error("Phone number or recovery PIN is wrong.");
+
+  const usersSheet = ensureSheet_("users");
+  const headers = getHeaders_("users", usersSheet);
+  setCellByHeader_(usersSheet, found.rowNumber, headers, "passwordHash", passwordHash);
+  setCellByHeader_(usersSheet, found.rowNumber, headers, "lastLogin", new Date().toISOString());
+  return { ok: true };
 }
 
 function socialPost_(user, data) {
@@ -260,6 +295,91 @@ function socialReact_(user, data) {
   }
 }
 
+function socialShare_(user, data) {
+  const postId = cleanText_(data.postId, 80);
+  const posts = readRows_("socialPosts").rows;
+  const found = posts.find(function (row) {
+    return row.object.postId === postId && !isHidden_(row.object);
+  });
+  if (!found) throw new Error("Post not found.");
+
+  const author = getUserById_(found.object.userId) || { name: "Member" };
+  appendObject_(ensureSheet_("socialPosts"), SHEETS.socialPosts.headers, {
+    postId: "p_" + Utilities.getUuid(),
+    userId: user.userId,
+    content: cleanText_("Shared from " + author.name + ":\n" + found.object.content, 700),
+    category: "update",
+    mediaUrl: found.object.mediaUrl || "",
+    createdAt: new Date().toISOString(),
+    status: ""
+  });
+}
+
+function socialFriendRequest_(user, data) {
+  const targetUserId = cleanText_(data.targetUserId, 80);
+  if (!targetUserId || targetUserId === user.userId) throw new Error("Invalid member.");
+  if (!getUserById_(targetUserId)) throw new Error("Member not found.");
+
+  const sheet = ensureSheet_("socialFriends");
+  const rows = readRows_("socialFriends").rows;
+  const now = new Date().toISOString();
+  const existing = rows.find(function (row) {
+    return samePair_(row.object, user.userId, targetUserId) && !isHidden_(row.object);
+  });
+
+  if (!existing) {
+    appendObject_(sheet, SHEETS.socialFriends.headers, {
+      friendId: "f_" + Utilities.getUuid(),
+      requesterId: user.userId,
+      addresseeId: targetUserId,
+      status: "pending",
+      createdAt: now,
+      updatedAt: now
+    });
+    return;
+  }
+
+  if (existing.object.status === "pending" && existing.object.addresseeId === user.userId) {
+    const headers = getHeaders_("socialFriends", sheet);
+    setCellByHeader_(sheet, existing.rowNumber, headers, "status", "accepted");
+    setCellByHeader_(sheet, existing.rowNumber, headers, "updatedAt", now);
+  }
+}
+
+function socialFriendRespond_(user, data) {
+  const targetUserId = cleanText_(data.targetUserId, 80);
+  const decision = cleanText_(data.decision, 20);
+  const sheet = ensureSheet_("socialFriends");
+  const headers = getHeaders_("socialFriends", sheet);
+  const rows = readRows_("socialFriends").rows;
+  const found = rows.find(function (row) {
+    return row.object.requesterId === targetUserId &&
+      row.object.addresseeId === user.userId &&
+      row.object.status === "pending" &&
+      !isHidden_(row.object);
+  });
+  if (!found) throw new Error("Friend request not found.");
+
+  setCellByHeader_(sheet, found.rowNumber, headers, "status", decision === "accept" ? "accepted" : "hidden");
+  setCellByHeader_(sheet, found.rowNumber, headers, "updatedAt", new Date().toISOString());
+}
+
+function socialMessage_(user, data) {
+  const targetUserId = cleanText_(data.targetUserId, 80);
+  const content = cleanText_(data.content, 500);
+  if (!targetUserId || !getUserById_(targetUserId)) throw new Error("Member not found.");
+  if (!content) throw new Error("Message cannot be empty.");
+
+  appendObject_(ensureSheet_("socialMessages"), SHEETS.socialMessages.headers, {
+    messageId: "m_" + Utilities.getUuid(),
+    fromUserId: user.userId,
+    toUserId: targetUserId,
+    content: content,
+    createdAt: new Date().toISOString(),
+    status: ""
+  });
+}
+
 function socialProfileUpdate_(user, data) {
   const usersSheet = ensureSheet_("users");
   const headers = getHeaders_("users", usersSheet);
@@ -283,11 +403,11 @@ function socialResponse_(user, token) {
     ok: true,
     token: token,
     user: publicUser_(user),
-    data: socialSnapshot_()
+    data: socialSnapshot_(user.userId)
   };
 }
 
-function socialSnapshot_() {
+function socialSnapshot_(userId) {
   return {
     users: readRows_("users").rows
       .map(function (row) { return row.object; })
@@ -301,7 +421,15 @@ function socialSnapshot_() {
       .filter(function (comment) { return !isHidden_(comment); }),
     reactions: readRows_("socialReactions").rows
       .map(function (row) { return row.object; })
-      .filter(function (reaction) { return !isHidden_(reaction); })
+      .filter(function (reaction) { return !isHidden_(reaction); }),
+    friendships: readRows_("socialFriends").rows
+      .map(function (row) { return row.object; })
+      .filter(function (friendship) { return !isHidden_(friendship); }),
+    messages: readRows_("socialMessages").rows
+      .map(function (row) { return row.object; })
+      .filter(function (message) {
+        return !isHidden_(message) && (message.fromUserId === userId || message.toUserId === userId);
+      })
   };
 }
 
@@ -405,23 +533,6 @@ function handleAdmin_(data, e) {
       error: error.message
     }, e);
   }
-}
-
-function savePublicMessage_(data, e) {
-  const sheet = ensureSheet_("messages");
-
-  sheet.appendRow([
-    new Date(),
-    data.name || "",
-    data.phone || "",
-    data.topic || "",
-    data.message || "",
-    data.lang || "",
-    data.page || "",
-    data.createdAt || ""
-  ]);
-
-  return respond_({ ok: true }, e);
 }
 
 function listSheets_(sheetKeys) {
@@ -580,6 +691,11 @@ function isAdminTokenValid_(token) {
 function isHidden_(object) {
   const status = String(object.status || "").toLowerCase();
   return status === "hidden" || status === "deleted";
+}
+
+function samePair_(object, a, b) {
+  return (object.requesterId === a && object.addresseeId === b) ||
+    (object.requesterId === b && object.addresseeId === a);
 }
 
 function cleanPhone_(value) {
