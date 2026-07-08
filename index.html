@@ -3,234 +3,37 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ग्राम कपूरपुर | Gram Kapoorpur</title>
-  <meta name="description" content="ग्राम कपूरपुर की सूचना, कार्यक्रम, जरूरी संपर्क, जनसेवा जानकारी और गांव की खबरें।">
+  <title>Kapoorpur Social</title>
+  <meta name="description" content="Kapoorpur Social: village social network for posts, friends, messages, notifications, profile and entertainment.">
   <meta name="theme-color" content="#155e45">
-  <meta property="og:title" content="ग्राम कपूरपुर | Gram Kapoorpur">
-  <meta property="og:description" content="ग्राम कपूरपुर की आधिकारिक समुदाय वेबसाइट।">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="assets/kapoorpur-hero.jpg">
+  <meta http-equiv="refresh" content="0; url=social.html">
+  <link rel="canonical" href="https://gramkapoorpur-netizen.github.io/gram-kapoorpur/social.html">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="preload" href="assets/kapoorpur-hero.jpg" as="image">
-  <link rel="stylesheet" href="styles.css">
-  <script src="config.js" defer></script>
-  <script src="app.js" defer></script>
+  <style>
+    body {
+      display: grid;
+      min-height: 100vh;
+      margin: 0;
+      place-items: center;
+      background: #f3f5f1;
+      color: #213028;
+      font-family: "Nirmala UI", Mangal, system-ui, sans-serif;
+      text-align: center;
+    }
+    a {
+      color: #155e45;
+      font-weight: 800;
+    }
+  </style>
+  <script>
+    window.location.replace("social.html");
+  </script>
 </head>
 <body>
-  <a class="skip-link" href="#content" data-i18n="skipLink">मुख्य सामग्री पर जाएं</a>
-
-  <header class="site-header" id="top">
-    <a class="brand" href="#top" aria-label="Gram Kapoorpur home">
-      <span class="brand-mark" aria-hidden="true">क</span>
-      <span>
-        <strong data-i18n="siteName">ग्राम कपूरपुर</strong>
-        <small data-i18n="siteTagline">अपना गांव, अपनी जानकारी</small>
-      </span>
-    </a>
-
-    <nav class="nav-links" id="navLinks" aria-label="Main navigation">
-      <a href="#notices" data-i18n="navNotices">सूचनाएं</a>
-      <a href="social.html" data-i18n="navSocial">सोशल</a>
-      <a href="#services" data-i18n="navServices">सेवाएं</a>
-      <a href="#events" data-i18n="navEvents">कार्यक्रम</a>
-      <a href="#directory" data-i18n="navDirectory">संपर्क</a>
-      <a href="#contact" data-i18n="navContact">सुझाव</a>
-    </nav>
-
-    <div class="header-actions">
-      <div class="language-switch" role="group" aria-label="Language">
-        <button type="button" class="active" data-lang-switch="hi">हिंदी</button>
-        <button type="button" data-lang-switch="en">EN</button>
-      </div>
-      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-    </div>
-  </header>
-
-  <main id="content">
-    <section class="hero" aria-labelledby="heroTitle">
-      <div class="hero-shade"></div>
-      <div class="hero-content">
-        <p class="eyebrow" data-i18n="heroEyebrow">कपूरपुर ग्राम समुदाय</p>
-        <h1 id="heroTitle" data-i18n="heroTitle">ग्राम कपूरपुर</h1>
-        <p class="hero-copy" data-i18n="heroCopy">सूचना, कार्यक्रम, जरूरी संपर्क और जनसेवा जानकारी अब एक जगह।</p>
-        <div class="hero-actions">
-          <a class="primary-action" href="#notices" data-i18n="heroPrimary">आज की सूचना देखें</a>
-          <a class="secondary-action" href="social.html" data-i18n="heroSocial">गांव सोशल खोलें</a>
-          <a class="secondary-action" href="#directory" data-i18n="heroSecondary">जरूरी नंबर</a>
-        </div>
-      </div>
-      <div class="quick-strip" aria-label="Village highlights">
-        <article>
-          <span data-i18n="quickOneLabel">सूचनाएं</span>
-          <strong id="noticeCount">0</strong>
-        </article>
-        <article>
-          <span data-i18n="quickTwoLabel">कार्यक्रम</span>
-          <strong id="eventCount">0</strong>
-        </article>
-        <article>
-          <span data-i18n="quickThreeLabel">जरूरी संपर्क</span>
-          <strong id="directoryCount">0</strong>
-        </article>
-      </div>
-    </section>
-
-    <section class="update-band" aria-live="polite">
-      <span id="dataStatus" data-i18n="loadingData">जानकारी लोड हो रही है...</span>
-      <a href="#contact" data-i18n="updateLink">गलती दिखे तो बताएं</a>
-    </section>
-
-    <section class="section intro-section" id="village" aria-labelledby="villageTitle">
-      <div class="section-copy">
-        <p class="eyebrow" data-i18n="villageEyebrow">गांव की जानकारी</p>
-        <h2 id="villageTitle" data-i18n="villageTitle">कपूरपुर के लिए सरल डिजिटल सूचना केंद्र</h2>
-        <p data-i18n="villageCopy">यह पेज गांव के लोगों को ताजा सूचना, सरकारी सेवा की जानकारी, पंचायत संपर्क और कार्यक्रम जल्दी देखने में मदद करता है।</p>
-      </div>
-      <div class="info-list">
-        <article>
-          <b data-i18n="infoOneTitle">मोबाइल पर आसान</b>
-          <p data-i18n="infoOneBody">कम डेटा में खुलने वाला साफ और बड़ा अक्षर वाला डिजाइन।</p>
-        </article>
-        <article>
-          <b data-i18n="infoTwoTitle">शीट से अपडेट</b>
-          <p data-i18n="infoTwoBody">सूचना Google Sheet से बदली जा सकती है, वेबसाइट को बार-बार edit करने की जरूरत नहीं।</p>
-        </article>
-        <article>
-          <b data-i18n="infoThreeTitle">Hindi first</b>
-          <p data-i18n="infoThreeBody">डिफॉल्ट भाषा हिंदी है, और जरूरत पर English भी उपलब्ध है।</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="ad-region" data-ad-container="top" hidden aria-label="Advertisement"></section>
-
-    <section class="section" id="notices" aria-labelledby="noticesTitle">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow" data-i18n="noticesEyebrow">नई जानकारी</p>
-          <h2 id="noticesTitle" data-i18n="noticesTitle">ग्राम सूचनाएं</h2>
-        </div>
-        <label class="search-box">
-          <span data-i18n="searchLabel">खोजें</span>
-          <input id="noticeSearch" type="search" autocomplete="off" data-i18n-placeholder="noticeSearchPlaceholder" placeholder="सूचना खोजें">
-        </label>
-      </div>
-      <div class="notice-grid" id="noticeList"></div>
-    </section>
-
-    <section class="section service-section" id="services" aria-labelledby="servicesTitle">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow" data-i18n="servicesEyebrow">जनसेवा</p>
-          <h2 id="servicesTitle" data-i18n="servicesTitle">काम की जानकारी</h2>
-        </div>
-      </div>
-      <div class="service-grid" id="serviceList"></div>
-    </section>
-
-    <section class="section split-section" id="events" aria-labelledby="eventsTitle">
-      <div class="section-copy">
-        <p class="eyebrow" data-i18n="eventsEyebrow">गांव का कैलेंडर</p>
-        <h2 id="eventsTitle" data-i18n="eventsTitle">आगामी कार्यक्रम</h2>
-        <p data-i18n="eventsCopy">सभा, स्वास्थ्य शिविर, स्वच्छता अभियान और स्कूल से जुड़ी तारीखें यहां दिखेंगी।</p>
-      </div>
-      <div class="timeline" id="eventList"></div>
-    </section>
-
-    <section class="ad-region" data-ad-container="middle" hidden aria-label="Advertisement"></section>
-
-    <section class="section" id="directory" aria-labelledby="directoryTitle">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow" data-i18n="directoryEyebrow">जरूरी नंबर</p>
-          <h2 id="directoryTitle" data-i18n="directoryTitle">ग्राम संपर्क सूची</h2>
-        </div>
-        <div class="filter-row" id="directoryFilters" aria-label="Directory filters"></div>
-      </div>
-      <div class="directory-grid" id="directoryList"></div>
-    </section>
-
-    <section class="section gallery-section" id="gallery" aria-labelledby="galleryTitle">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow" data-i18n="galleryEyebrow">फोटो</p>
-          <h2 id="galleryTitle" data-i18n="galleryTitle">कपूरपुर की झलक</h2>
-        </div>
-      </div>
-      <div class="gallery-grid" id="galleryList"></div>
-    </section>
-
-    <section class="section contact-section" id="contact" aria-labelledby="contactTitle">
-      <div class="section-copy">
-        <p class="eyebrow" data-i18n="contactEyebrow">सुझाव और सुधार</p>
-        <h2 id="contactTitle" data-i18n="contactTitle">गांव की जानकारी भेजें</h2>
-        <p data-i18n="contactCopy">अगर कोई सूचना, नंबर या तारीख गलत है, तो यहां संदेश भेजें।</p>
-        <div class="contact-lines">
-          <a id="contactPhone" href="#" hidden></a>
-          <a id="contactEmail" href="#" hidden></a>
-        </div>
-      </div>
-
-      <form class="contact-form" id="contactForm">
-        <label>
-          <span data-i18n="formName">नाम</span>
-          <input name="name" type="text" autocomplete="name" required>
-        </label>
-        <label>
-          <span data-i18n="formPhone">मोबाइल नंबर</span>
-          <input name="phone" type="tel" inputmode="tel" autocomplete="tel">
-        </label>
-        <label>
-          <span data-i18n="formTopic">विषय</span>
-          <select name="topic">
-            <option value="notice" data-i18n="topicNotice">सूचना</option>
-            <option value="contact" data-i18n="topicContact">संपर्क नंबर</option>
-            <option value="correction" data-i18n="topicCorrection">सुधार</option>
-            <option value="other" data-i18n="topicOther">अन्य</option>
-          </select>
-        </label>
-        <label>
-          <span data-i18n="formMessage">संदेश</span>
-          <textarea name="message" rows="4" required></textarea>
-        </label>
-        <button class="primary-action" type="submit" data-i18n="formSubmit">भेजें</button>
-        <p class="form-note" id="formNote" role="status" aria-live="polite"></p>
-      </form>
-    </section>
-
-    <section class="section policy-section" id="privacy" aria-labelledby="privacyTitle">
-      <div class="section-copy">
-        <p class="eyebrow" data-i18n="privacyEyebrow">नीति</p>
-        <h2 id="privacyTitle" data-i18n="privacyTitle">Privacy और उपयोग</h2>
-      </div>
-      <div class="policy-text">
-        <p data-i18n="privacyBodyOne">यह वेबसाइट गांव की सार्वजनिक जानकारी दिखाने के लिए बनाई गई है। संपर्क फॉर्म से भेजी गई जानकारी सिर्फ सुधार और जवाब देने के लिए इस्तेमाल होगी।</p>
-        <p data-i18n="privacyBodyTwo">AdSense चालू होने पर Google cookies या similar technology का उपयोग कर सकता है। आप अपने browser settings से cookies नियंत्रित कर सकते हैं।</p>
-      </div>
-    </section>
-
-    <section class="ad-region" data-ad-container="bottom" hidden aria-label="Advertisement"></section>
+  <main>
+    <h1>Kapoorpur Social</h1>
+    <p>Social network खुल रहा है...</p>
+    <p><a href="social.html">यहां क्लिक करें</a></p>
   </main>
-
-  <footer class="site-footer">
-    <a class="brand footer-brand" href="#top" aria-label="Gram Kapoorpur home">
-      <span class="brand-mark" aria-hidden="true">क</span>
-      <span>
-        <strong data-i18n="siteName">ग्राम कपूरपुर</strong>
-        <small data-i18n="footerLine">समुदाय के लिए हल्की और साफ वेबसाइट</small>
-      </span>
-    </a>
-    <div class="footer-links">
-      <a href="#privacy" data-i18n="footerPrivacy">Privacy</a>
-      <a href="social.html" data-i18n="footerSocial">Social</a>
-      <a href="#contact" data-i18n="footerContact">Contact</a>
-      <a href="#top" data-i18n="footerTop">ऊपर जाएं</a>
-    </div>
-  </footer>
 </body>
 </html>
