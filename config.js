@@ -13,6 +13,10 @@ window.GRAM_KAPOORPUR_CONFIG = {
   // Paste the Google Apps Script Web App URL here to save contact form messages.
   formEndpoint: "",
 
+  // Use the same Apps Script Web App URL for the shared social network.
+  // If this is empty, social.html works in browser-only demo mode on each device.
+  socialEndpoint: "",
+
   // Fill these after Google AdSense gives your publisher ID and ad slot IDs.
   adsenseClient: "",
   adSlots: {
