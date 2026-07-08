@@ -59,7 +59,7 @@ Admin can list, add, edit, hide, and delete rows in `notices`, `events`, `direct
 
 The social page is available at `/social.html`.
 
-It works immediately in demo mode on each browser. For a shared village network:
+It works immediately on each browser. For a shared village network where every villager sees the same accounts and posts:
 
 1. Deploy `google-apps-script.gs` as the Apps Script Web App.
 2. Copy the Web App URL into both `formEndpoint` and `socialEndpoint` in `config.js`.
