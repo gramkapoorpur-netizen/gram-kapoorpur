@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kapoorpur Social | ग्राम कपूरपुर</title>
+  <meta name="description" content="ग्राम कपूरपुर का हल्का सोशल नेटवर्क: लॉगिन, पोस्ट, कमेंट, सदस्य और मनोरंजन।">
+  <meta name="theme-color" content="#155e45">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="social.css">
+  <script src="config.js" defer></script>
+  <script src="social.js" defer></script>
+</head>
+<body>
+  <header class="social-topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">क</span>
+      <span>
+        <strong>Kapoorpur Social</strong>
+        <small>गांव की अपनी बातचीत</small>
+      </span>
+    </a>
+    <div class="top-actions">
+      <span id="modeBadge" class="mode-badge">Demo</span>
+      <a href="index.html" class="plain-link">Website</a>
+      <button type="button" id="logoutButton" class="ghost-button" hidden>Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-copy">
+        <p class="eyebrow">Kapoorpur Social</p>
+        <h1>ग्राम कपूरपुर का सोशल नेटवर्क</h1>
+        <p>गांव की खबरें, फोटो लिंक, शुभकामनाएं, मजेदार सवाल, कमेंट और लोगों से जुड़ने की जगह।</p>
+        <div class="feature-list">
+          <span>पोस्ट</span>
+          <span>लाइक</span>
+          <span>कमेंट</span>
+          <span>मनोरंजन</span>
+        </div>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button type="button" class="active" data-auth-tab="login">Login</button>
+          <button type="button" data-auth-tab="register">Register</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <label>
+            <span>मोबाइल नंबर</span>
+            <input name="phone" type="tel" inputmode="tel" autocomplete="tel" required>
+          </label>
+          <label>
+            <span>Password</span>
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit">Login करें</button>
+        </form>
+
+        <form id="registerForm" class="auth-form" hidden>
+          <label>
+            <span>पूरा नाम</span>
+            <input name="name" type="text" autocomplete="name" required>
+          </label>
+          <label>
+            <span>मोबाइल नंबर</span>
+            <input name="phone" type="tel" inputmode="tel" autocomplete="tel" required>
+          </label>
+          <label>
+            <span>Password</span>
+            <input name="password" type="password" minlength="4" autocomplete="new-password" required>
+          </label>
+          <label>
+            <span>मोहल्ला / पुरवा</span>
+            <input name="village" type="text" value="Kapoorpur">
+          </label>
+          <label>
+            <span>काम / पहचान</span>
+            <input name="profession" type="text" placeholder="किसान, विद्यार्थी, शिक्षक...">
+          </label>
+          <button type="submit">Account बनाएं</button>
+        </form>
+
+        <p class="auth-note" id="authNote" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="app-shell" id="appShell" hidden>
+      <aside class="left-rail">
+        <article class="profile-mini">
+          <div class="avatar" id="sideAvatar">क</div>
+          <h2 id="sideName">User</h2>
+          <p id="sideMeta">Kapoorpur</p>
+        </article>
+        <nav class="rail-nav" aria-label="Social sections">
+          <button type="button" class="active" data-view="feed">Feed</button>
+          <button type="button" data-view="members">Members</button>
+          <button type="button" data-view="entertainment">Entertainment</button>
+          <button type="button" data-view="profile">Profile</button>
+        </nav>
+      </aside>
+
+      <section class="main-feed" id="feedView">
+        <form class="composer" id="postForm">
+          <div class="composer-head">
+            <div class="avatar small" id="composerAvatar">क</div>
+            <div>
+              <strong id="composerName">Kapoorpur member</strong>
+              <span>गांव में कुछ अच्छा शेयर करें</span>
+            </div>
+          </div>
+          <textarea name="content" rows="4" maxlength="700" placeholder="क्या सोच रहे हैं? शुभकामना, सूचना, फोटो लिंक या गांव की याद लिखें..." required></textarea>
+          <div class="composer-row">
+            <select name="category" aria-label="Post category">
+              <option value="update">Update</option>
+              <option value="photo">Photo link</option>
+              <option value="festival">Festival</option>
+              <option value="help">Help</option>
+              <option value="fun">Fun</option>
+            </select>
+            <input name="mediaUrl" type="url" placeholder="Photo/video URL optional">
+            <button type="submit">Post</button>
+          </div>
+        </form>
+        <div class="feed-list" id="feedList"></div>
+      </section>
+
+      <section class="main-feed" id="membersView" hidden>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Members</p>
+            <h1>गांव के सदस्य</h1>
+          </div>
+          <input id="memberSearch" type="search" placeholder="नाम खोजें">
+        </div>
+        <div class="member-grid" id="memberGrid"></div>
+      </section>
+
+      <section class="main-feed" id="entertainmentView" hidden>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Entertainment</p>
+            <h1>मनोरंजन चौपाल</h1>
+          </div>
+        </div>
+        <div class="fun-grid">
+          <article class="fun-card">
+            <span>आज का सवाल</span>
+            <h2 id="dailyQuestion">कपूरपुर की सबसे प्यारी जगह कौन सी है?</h2>
+            <button type="button" data-fun-post="question">इस पर पोस्ट करें</button>
+          </article>
+          <article class="fun-card">
+            <span>गांव की याद</span>
+            <h2>पुरानी याद या बचपन की बात शेयर करें।</h2>
+            <button type="button" data-fun-post="memory">याद लिखें</button>
+          </article>
+          <article class="fun-card">
+            <span>शुभकामना</span>
+            <h2>त्योहार, जन्मदिन या सफलता की बधाई दें।</h2>
+            <button type="button" data-fun-post="wish">बधाई पोस्ट करें</button>
+          </article>
+          <article class="fun-card">
+            <span>पहेली</span>
+            <h2 id="riddleText">ऐसी कौन सी चीज है जो बांटने से बढ़ती है?</h2>
+            <button type="button" id="answerButton">उत्तर देखें</button>
+            <p id="riddleAnswer" hidden>खुशी और ज्ञान।</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="main-feed" id="profileView" hidden>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Profile</p>
+            <h1>अपनी प्रोफाइल</h1>
+          </div>
+        </div>
+        <form class="profile-form" id="profileForm">
+          <label>
+            <span>नाम</span>
+            <input name="name" type="text" required>
+          </label>
+          <label>
+            <span>मोहल्ला / पुरवा</span>
+            <input name="village" type="text">
+          </label>
+          <label>
+            <span>काम / पहचान</span>
+            <input name="profession" type="text">
+          </label>
+          <label>
+            <span>Bio</span>
+            <textarea name="bio" rows="4" maxlength="300"></textarea>
+          </label>
+          <button type="submit">Profile save करें</button>
+        </form>
+      </section>
+
+      <aside class="right-rail">
+        <article class="side-panel">
+          <h2>आज की चौपाल</h2>
+          <p id="sideQuestion">गांव में किस सुधार से सबसे ज्यादा फायदा होगा?</p>
+          <button type="button" data-fun-post="chaupal">जवाब पोस्ट करें</button>
+        </article>
+        <article class="side-panel">
+          <h2>नए सदस्य</h2>
+          <div id="newMembers" class="new-members"></div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
