@@ -82,7 +82,13 @@
   const $ = (selector) => document.querySelector(selector);
 
   function init() {
-    $("#modeBadge").textContent = state.mode === "shared" ? "Shared Sheet" : "Demo mode";
+    const badge = $("#modeBadge");
+    if (state.mode === "shared") {
+      badge.textContent = "Live";
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
     bindEvents();
     loadSession();
   }
@@ -284,7 +290,7 @@
       const script = document.createElement("script");
       const timeout = setTimeout(() => {
         cleanup();
-        resolve({ ok: false, error: "Shared backend response नहीं आया। Demo mode try करें या Apps Script URL check करें।" });
+        resolve({ ok: false, error: "Shared backend response नहीं आया। Apps Script URL check करें।" });
       }, 12000);
 
       window[callbackName] = (result) => {
