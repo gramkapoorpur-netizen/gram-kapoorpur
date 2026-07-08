@@ -12,6 +12,7 @@ Direct app URL:
 
 - Login and register
 - Forgot password with Recovery PIN
+- Hindi default with English language switch
 - Feed posts
 - Like, comment, and share
 - Friend requests
