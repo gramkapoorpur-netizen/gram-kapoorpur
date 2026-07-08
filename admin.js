@@ -3,72 +3,13 @@
 
   const config = window.GRAM_KAPOORPUR_CONFIG || {};
   const state = {
-    endpoint: localStorage.getItem("gramKapoorpurAdminEndpoint") || config.formEndpoint || "",
+    endpoint: localStorage.getItem("gramKapoorpurAdminEndpoint") || config.socialEndpoint || config.formEndpoint || "",
     token: sessionStorage.getItem("gramKapoorpurAdminToken") || "",
-    activeSheet: "notices",
+    activeSheet: "users",
     data: {}
   };
 
   const sheets = {
-    notices: {
-      title: "Notices",
-      rowName: "notice",
-      editable: true,
-      fields: [
-        "title_hi",
-        "title_en",
-        "body_hi",
-        "body_en",
-        "date",
-        "type_hi",
-        "type_en",
-        "important",
-        "status"
-      ]
-    },
-    events: {
-      title: "Events",
-      rowName: "event",
-      editable: true,
-      fields: [
-        "title_hi",
-        "title_en",
-        "date",
-        "time",
-        "place_hi",
-        "place_en",
-        "details_hi",
-        "details_en",
-        "status"
-      ]
-    },
-    directory: {
-      title: "Directory",
-      rowName: "contact",
-      editable: true,
-      fields: [
-        "name_hi",
-        "name_en",
-        "role_hi",
-        "role_en",
-        "phone",
-        "category",
-        "status"
-      ]
-    },
-    gallery: {
-      title: "Gallery",
-      rowName: "photo",
-      editable: true,
-      fields: [
-        "title_hi",
-        "title_en",
-        "image",
-        "caption_hi",
-        "caption_en",
-        "status"
-      ]
-    },
     users: {
       title: "Users / Profiles",
       rowName: "profile",
@@ -78,6 +19,7 @@
         "name",
         "phone",
         "passwordHash",
+        "recoveryHash",
         "email",
         "role",
         "village",
@@ -128,6 +70,32 @@
         "status"
       ]
     },
+    socialFriends: {
+      title: "Friends",
+      rowName: "friend link",
+      editable: true,
+      fields: [
+        "friendId",
+        "requesterId",
+        "addresseeId",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    socialMessages: {
+      title: "Messages",
+      rowName: "message",
+      editable: true,
+      fields: [
+        "messageId",
+        "fromUserId",
+        "toUserId",
+        "content",
+        "createdAt",
+        "status"
+      ]
+    },
     sessions: {
       title: "Sessions",
       rowName: "session",
@@ -138,21 +106,6 @@
         "createdAt",
         "lastSeen",
         "status"
-      ]
-    },
-    messages: {
-      title: "Messages",
-      rowName: "message",
-      editable: false,
-      fields: [
-        "Received At",
-        "Name",
-        "Phone",
-        "Topic",
-        "Message",
-        "Language",
-        "Page",
-        "Created At"
       ]
     }
   };
@@ -189,6 +142,7 @@
     bio: "Bio",
     userId: "User ID",
     passwordHash: "Password hash",
+    recoveryHash: "Recovery PIN hash",
     createdAt: "Created at",
     lastLogin: "Last login",
     postId: "Post ID",
@@ -197,6 +151,13 @@
     commentId: "Comment ID",
     reactionId: "Reaction ID",
     type: "Type",
+    friendId: "Friend ID",
+    requesterId: "Requester ID",
+    addresseeId: "Addressee ID",
+    updatedAt: "Updated at",
+    messageId: "Message ID",
+    fromUserId: "From user ID",
+    toUserId: "To user ID",
     sessionToken: "Session token",
     lastSeen: "Last seen",
     notes: "Notes"
@@ -413,10 +374,10 @@
   }
 
   function renderStats() {
-    document.getElementById("statNotices").textContent = rowCount("notices");
-    document.getElementById("statEvents").textContent = rowCount("events");
-    document.getElementById("statDirectory").textContent = rowCount("directory");
     document.getElementById("statUsers").textContent = rowCount("users");
+    document.getElementById("statPosts").textContent = rowCount("socialPosts");
+    document.getElementById("statComments").textContent = rowCount("socialComments");
+    document.getElementById("statMessages").textContent = rowCount("socialMessages");
   }
 
   function rowCount(sheetKey) {
@@ -435,7 +396,7 @@
     form.querySelector("button[type='submit']").disabled = !sheet.editable;
 
     if (!sheet.editable) {
-      fields.innerHTML = "<p class=\"empty\">Messages are read only.</p>";
+      fields.innerHTML = "<p class=\"empty\">This section is read only.</p>";
       return;
     }
 
