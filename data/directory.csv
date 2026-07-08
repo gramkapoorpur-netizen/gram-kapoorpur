@@ -1,0 +1,6 @@
+name_hi,name_en,role_hi,role_en,phone,category,status
+"ग्राम पंचायत कार्यालय","Gram Panchayat Office","पंचायत कार्य और प्रमाण पत्र जानकारी","Panchayat work and certificate information",,panchayat,
+"स्वास्थ्य सहायता","Health Help","स्वास्थ्य शिविर और टीकाकरण जानकारी","Health camp and vaccination information",,health,
+"प्राथमिक विद्यालय","Primary School","प्रवेश और स्कूल सूचना","Admission and school information",,education,
+"आपातकालीन सेवा","Emergency Service","तुरंत सहायता के लिए सरकारी हेल्पलाइन","Government helpline for urgent help",112,emergency,
+"महिला हेल्पलाइन","Women Helpline","सरकारी महिला सुरक्षा हेल्पलाइन","Government women safety helpline",1091,emergency,
