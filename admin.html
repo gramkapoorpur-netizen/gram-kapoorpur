@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Admin | Gram Kapoorpur</title>
+  <meta name="theme-color" content="#155e45">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="admin.css">
+  <script src="config.js" defer></script>
+  <script src="admin.js" defer></script>
+</head>
+<body>
+  <header class="admin-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">क</span>
+      <span>
+        <strong>Gram Kapoorpur Admin</strong>
+        <small>Manoj Singh Sikarwar</small>
+      </span>
+    </a>
+    <a class="site-link" href="index.html">Website</a>
+  </header>
+
+  <main class="admin-shell">
+    <section class="panel setup-panel" aria-labelledby="setupTitle">
+      <div>
+        <p class="eyebrow">Secure access</p>
+        <h1 id="setupTitle">Admin Panel</h1>
+        <p class="muted">Use this page to update notices, events, contacts, gallery items, messages, and future user/profile records stored in your private Google Sheet.</p>
+      </div>
+
+      <form id="settingsForm" class="settings-grid">
+        <label>
+          <span>Apps Script Web App URL</span>
+          <input id="endpointInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+        </label>
+        <label>
+          <span>Admin token</span>
+          <input id="tokenInput" type="password" placeholder="Private ADMIN_TOKEN" autocomplete="current-password">
+        </label>
+        <div class="button-row">
+          <button type="submit">Save settings</button>
+          <button type="button" class="secondary" id="loadButton">Load data</button>
+          <button type="button" class="ghost" id="logoutButton">Clear token</button>
+        </div>
+      </form>
+      <p class="status-line" id="statusLine" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="stats-grid" aria-label="Admin summary">
+      <article><span>Notices</span><strong id="statNotices">0</strong></article>
+      <article><span>Events</span><strong id="statEvents">0</strong></article>
+      <article><span>Contacts</span><strong id="statDirectory">0</strong></article>
+      <article><span>Users</span><strong id="statUsers">0</strong></article>
+    </section>
+
+    <section class="panel">
+      <div class="tabs" id="tabs" role="tablist" aria-label="Admin sections"></div>
+      <div class="admin-layout">
+        <form class="editor" id="rowForm">
+          <div class="editor-head">
+            <div>
+              <p class="eyebrow" id="editorEyebrow">Editor</p>
+              <h2 id="editorTitle">Add row</h2>
+            </div>
+            <button type="button" class="ghost" id="resetFormButton">New</button>
+          </div>
+          <div id="formFields" class="form-fields"></div>
+          <div class="button-row">
+            <button type="submit" id="saveRowButton">Save row</button>
+          </div>
+          <input type="hidden" id="editingSheet">
+          <input type="hidden" id="editingRow">
+        </form>
+
+        <div class="table-wrap">
+          <div class="table-head">
+            <div>
+              <p class="eyebrow" id="tableEyebrow">Data</p>
+              <h2 id="tableTitle">Rows</h2>
+            </div>
+            <label class="search-field">
+              <span>Search</span>
+              <input id="tableSearch" type="search" autocomplete="off">
+            </label>
+          </div>
+          <div id="tableContainer" class="table-container"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel help-panel">
+      <h2>Important</h2>
+      <p>This admin page is safe for GitHub Pages because the secret token is not stored in the website files. Keep the token private and rotate it if it is shared by mistake.</p>
+      <p>User/profile data should stay in the private Google Sheet. Do not publish the users sheet as a public CSV.</p>
+    </section>
+  </main>
+</body>
+</html>
