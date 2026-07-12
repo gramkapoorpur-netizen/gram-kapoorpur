@@ -5,9 +5,13 @@
   const state = {
     endpoint: localStorage.getItem("gramKapoorpurAdminEndpoint") || config.socialEndpoint || config.formEndpoint || "",
     token: sessionStorage.getItem("gramKapoorpurAdminToken") || "",
+    unlocked: sessionStorage.getItem("gramKapoorpurAdminGate") === "yes",
     activeSheet: "users",
     data: {}
   };
+  const adminMobile = "7619559629";
+  const adminGateSalt = "kapoorpur-social-admin-mobile-v1";
+  const adminGateHash = "39d38aa7c42d42a59f793838ba137cc693dafc698d384dea27c8c0bd0bbd4c88";
 
   const sheets = {
     users: {
@@ -25,6 +29,9 @@
         "village",
         "profession",
         "bio",
+        "avatarUrl",
+        "avatarType",
+        "avatarName",
         "createdAt",
         "lastLogin",
         "status"
@@ -40,6 +47,8 @@
         "content",
         "category",
         "mediaUrl",
+        "mediaType",
+        "mediaName",
         "createdAt",
         "status"
       ]
@@ -140,6 +149,9 @@
     village: "Village",
     profession: "Profession",
     bio: "Bio",
+    avatarUrl: "Profile photo URL",
+    avatarType: "Profile photo type",
+    avatarName: "Profile photo name",
     userId: "User ID",
     passwordHash: "Password hash",
     recoveryHash: "Recovery PIN hash",
@@ -148,6 +160,8 @@
     postId: "Post ID",
     content: "Content",
     mediaUrl: "Media URL",
+    mediaType: "Media type",
+    mediaName: "Media name",
     commentId: "Comment ID",
     reactionId: "Reaction ID",
     type: "Type",
@@ -171,9 +185,12 @@
     renderTabs();
     renderForm();
     renderTable();
+    renderGate();
   }
 
   function bindEvents() {
+    document.getElementById("adminGateForm").addEventListener("submit", handleGateLogin);
+
     document.getElementById("settingsForm").addEventListener("submit", (event) => {
       event.preventDefault();
       saveSettings();
@@ -186,14 +203,37 @@
 
     document.getElementById("logoutButton").addEventListener("click", () => {
       state.token = "";
+      state.unlocked = false;
       sessionStorage.removeItem("gramKapoorpurAdminToken");
+      sessionStorage.removeItem("gramKapoorpurAdminGate");
       document.getElementById("tokenInput").value = "";
+      renderGate();
       setStatus("Token cleared from this browser.", "good");
     });
 
     document.getElementById("rowForm").addEventListener("submit", saveRow);
     document.getElementById("resetFormButton").addEventListener("click", resetForm);
     document.getElementById("tableSearch").addEventListener("input", renderTable);
+  }
+
+  async function handleGateLogin(event) {
+    event.preventDefault();
+    const mobile = cleanPhone(document.getElementById("adminMobileInput").value);
+    const password = document.getElementById("adminPasswordInput").value;
+    const hash = await hashValue(`${mobile}:${password}:${adminGateSalt}`);
+    if (mobile === adminMobile && hash === adminGateHash) {
+      state.unlocked = true;
+      sessionStorage.setItem("gramKapoorpurAdminGate", "yes");
+      document.getElementById("adminGateForm").reset();
+      renderGate();
+      return;
+    }
+    setGateStatus("Mobile number or password is wrong.", "bad");
+  }
+
+  function renderGate() {
+    document.getElementById("adminGate").hidden = state.unlocked;
+    document.getElementById("adminApp").hidden = !state.unlocked;
   }
 
   function saveSettings() {
@@ -490,6 +530,25 @@
     const line = document.getElementById("statusLine");
     line.textContent = message;
     line.className = `status-line ${type || ""}`;
+  }
+
+  function setGateStatus(message, type) {
+    const line = document.getElementById("adminGateStatus");
+    line.textContent = message;
+    line.className = `status-line ${type || ""}`;
+  }
+
+  function cleanPhone(value) {
+    return String(value || "").replace(/[^\d]/g, "").slice(-10);
+  }
+
+  async function hashValue(text) {
+    if (!window.crypto || !window.crypto.subtle) {
+      return btoa(unescape(encodeURIComponent(text)));
+    }
+    const bytes = new TextEncoder().encode(text);
+    const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
   }
 
   function escapeHtml(value) {
