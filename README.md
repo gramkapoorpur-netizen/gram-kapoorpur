@@ -14,12 +14,13 @@ Direct app URL:
 - Forgot password with Recovery PIN
 - Hindi default with English language switch
 - Feed posts
+- Upload photo/video in posts
 - Like, comment, and share
 - Friend requests
 - Members search
 - Private-style messages
 - Notifications
-- Profile editing
+- Profile editing with profile picture
 - Entertainment / fun prompts
 - Admin panel for removing users, posts, comments, messages, sessions, and friend links
 
@@ -41,6 +42,8 @@ socialEndpoint: "YOUR_APPS_SCRIPT_WEB_APP_URL",
 6. Upload the changed `config.js` to GitHub Pages.
 
 Passwords are stored as hashes, not plain text. This is suitable for a simple village community site, not high-security banking-style authentication.
+
+Photo/video uploads on GitHub Pages use the browser's local storage/IndexedDB so the feature works without paid hosting. For shared media visible to every villager on every phone, deploy the updated Apps Script and connect it to a storage solution such as Google Drive.
 
 ## Admin Panel
 
