@@ -4,12 +4,12 @@ const SHEETS = {
   users: {
     name: "users",
     editable: true,
-    headers: ["userId", "name", "phone", "passwordHash", "recoveryHash", "email", "role", "village", "profession", "bio", "createdAt", "lastLogin", "status"]
+    headers: ["userId", "name", "phone", "passwordHash", "recoveryHash", "email", "role", "village", "profession", "bio", "avatarUrl", "avatarType", "avatarName", "createdAt", "lastLogin", "status"]
   },
   socialPosts: {
     name: "socialPosts",
     editable: true,
-    headers: ["postId", "userId", "content", "category", "mediaUrl", "createdAt", "status"]
+    headers: ["postId", "userId", "content", "category", "mediaUrl", "mediaType", "mediaName", "createdAt", "status"]
   },
   socialComments: {
     name: "socialComments",
@@ -240,14 +240,17 @@ function socialResetPassword_(data) {
 
 function socialPost_(user, data) {
   const content = cleanText_(data.content, 700);
-  if (!content) throw new Error("Post cannot be empty.");
+  const mediaUrl = cleanText_(data.mediaUrl, 500);
+  if (!content && !mediaUrl) throw new Error("Post cannot be empty.");
 
   appendObject_(ensureSheet_("socialPosts"), SHEETS.socialPosts.headers, {
     postId: "p_" + Utilities.getUuid(),
     userId: user.userId,
     content: content,
     category: cleanText_(data.category || "update", 30),
-    mediaUrl: cleanText_(data.mediaUrl, 500),
+    mediaUrl: mediaUrl,
+    mediaType: cleanText_(data.mediaType, 80),
+    mediaName: cleanText_(data.mediaName, 140),
     createdAt: new Date().toISOString(),
     status: ""
   });
@@ -310,6 +313,8 @@ function socialShare_(user, data) {
     content: cleanText_("Shared from " + author.name + ":\n" + found.object.content, 700),
     category: "update",
     mediaUrl: found.object.mediaUrl || "",
+    mediaType: found.object.mediaType || "",
+    mediaName: found.object.mediaName || "",
     createdAt: new Date().toISOString(),
     status: ""
   });
@@ -394,6 +399,15 @@ function socialProfileUpdate_(user, data) {
   setCellByHeader_(usersSheet, found.rowNumber, headers, "village", cleanText_(data.village, 80));
   setCellByHeader_(usersSheet, found.rowNumber, headers, "profession", cleanText_(data.profession, 80));
   setCellByHeader_(usersSheet, found.rowNumber, headers, "bio", cleanText_(data.bio, 300));
+  if (data.avatarRemove) {
+    setCellByHeader_(usersSheet, found.rowNumber, headers, "avatarUrl", "");
+    setCellByHeader_(usersSheet, found.rowNumber, headers, "avatarType", "");
+    setCellByHeader_(usersSheet, found.rowNumber, headers, "avatarName", "");
+  } else if (data.avatarUrl) {
+    setCellByHeader_(usersSheet, found.rowNumber, headers, "avatarUrl", cleanText_(data.avatarUrl, 500));
+    setCellByHeader_(usersSheet, found.rowNumber, headers, "avatarType", cleanText_(data.avatarType, 80));
+    setCellByHeader_(usersSheet, found.rowNumber, headers, "avatarName", cleanText_(data.avatarName, 140));
+  }
 
   return getUserById_(user.userId);
 }
@@ -440,6 +454,9 @@ function publicUser_(user) {
     village: user.village,
     profession: user.profession,
     bio: user.bio,
+    avatarUrl: user.avatarUrl || "",
+    avatarType: user.avatarType || "",
+    avatarName: user.avatarName || "",
     createdAt: user.createdAt,
     status: user.status
   };
@@ -652,6 +669,13 @@ function getHeaders_(sheetKey, sheet) {
     sheet.getRange(1, 1, 1, spec.headers.length).setValues([spec.headers]);
     return spec.headers.slice();
   }
+
+  spec.headers.forEach(function (header) {
+    if (headers.indexOf(header) === -1) {
+      headers.push(header);
+      sheet.getRange(1, headers.length).setValue(header);
+    }
+  });
 
   return headers;
 }
