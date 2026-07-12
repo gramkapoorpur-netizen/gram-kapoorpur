@@ -14,8 +14,18 @@
     user: null,
     data: null,
     activeView: "feed",
-    chatUserId: ""
+    chatUserId: "",
+    pendingPostMedia: null,
+    pendingAvatar: null,
+    avatarRemove: false
   };
+
+  const mediaDbName = "gramKapoorpurMediaDb";
+  const mediaStoreName = "media";
+  const mediaFallbackKey = "gramKapoorpurMediaFallback";
+  const maxImageBytes = 12 * 1024 * 1024;
+  const maxAvatarBytes = 8 * 1024 * 1024;
+  const maxVideoBytes = 50 * 1024 * 1024;
 
   const seedData = {
     users: [
@@ -28,6 +38,10 @@
         village: "Kapoorpur",
         profession: "Admin",
         bio: "Gram Kapoorpur digital parivar me aapka swagat hai.",
+        avatarUrl: "",
+        avatarLocalId: "",
+        avatarType: "",
+        avatarName: "",
         createdAt: new Date().toISOString(),
         status: ""
       },
@@ -40,6 +54,10 @@
         village: "Kapoorpur",
         profession: "Self help group",
         bio: "",
+        avatarUrl: "",
+        avatarLocalId: "",
+        avatarType: "",
+        avatarName: "",
         createdAt: new Date(Date.now() - 86400000).toISOString(),
         status: ""
       },
@@ -52,6 +70,10 @@
         village: "Kapoorpur",
         profession: "Student",
         bio: "",
+        avatarUrl: "",
+        avatarLocalId: "",
+        avatarType: "",
+        avatarName: "",
         createdAt: new Date(Date.now() - 172800000).toISOString(),
         status: ""
       }
@@ -63,6 +85,9 @@
         content: "Namaste Kapoorpur! Ye gaon ki apni social chaupal hai. Yahan post, comment, dosti, message aur manoranjan sab ek jagah hai.",
         category: "update",
         mediaUrl: "",
+        mediaType: "",
+        mediaName: "",
+        mediaLocalId: "",
         createdAt: new Date().toISOString(),
         status: ""
       },
@@ -72,6 +97,9 @@
         content: "Aaj ka sawal: Kapoorpur me bachcho ke liye kaunsi new activity honi chahiye?",
         category: "fun",
         mediaUrl: "",
+        mediaType: "",
+        mediaName: "",
+        mediaLocalId: "",
         createdAt: new Date(Date.now() - 3600000).toISOString(),
         status: ""
       }
@@ -141,6 +169,13 @@
       profile: "प्रोफाइल",
       composerHint: "गांव में कुछ अच्छा शेयर करें",
       composerPlaceholder: "क्या सोच रहे हैं? शुभकामना, मदद, फोटो लिंक या गांव की याद लिखें...",
+      uploadMedia: "Photo/video upload",
+      removeMedia: "Remove",
+      mediaReady: "Media ready",
+      mediaLoading: "Media loading...",
+      mediaUnsupported: "यह file support नहीं है। Photo या video चुनें।",
+      mediaTooLarge: "File बहुत बड़ी है। छोटी photo या video चुनें।",
+      mediaLocalOnly: "File इस device पर save हुई है।",
       post: "पोस्ट करें",
       friendsEyebrow: "दोस्त",
       friendsTitle: "दोस्त और requests",
@@ -165,6 +200,8 @@
       seeAnswer: "उत्तर देखें",
       riddleAnswer: "खुशी और ज्ञान।",
       profileTitle: "अपनी प्रोफाइल",
+      profilePhoto: "Profile photo upload",
+      removePhoto: "Remove photo",
       name: "नाम",
       bio: "Bio",
       saveProfile: "Profile save करें",
@@ -200,6 +237,7 @@
       noRequests: "No requests",
       categoryUpdate: "Update",
       categoryPhoto: "Photo",
+      categoryVideo: "Video",
       categoryFestival: "Festival",
       categoryHelp: "Help",
       categoryFun: "Fun",
@@ -214,12 +252,16 @@
       welcome: "Welcome, ",
       postFailed: "Post save नहीं हुआ।",
       postAdded: "Post added",
+      postNeedsContent: "Post के लिए text, photo, video या URL जोड़ें।",
       likeFailed: "Like save नहीं हुआ।",
       shareFailed: "Share नहीं हुआ।",
       postShared: "Post shared",
       commentFailed: "Comment save नहीं हुआ।",
       profileFailed: "Profile save नहीं हुई।",
       profileSaved: "Profile saved",
+      photoReady: "Profile photo ready",
+      avatarAlt: "Profile photo",
+      videoAlt: "Post video",
       requestFailed: "Request नहीं भेजी गई।",
       requestSentToast: "Friend request sent",
       requestUpdateFailed: "Request update नहीं हुई।",
@@ -267,6 +309,13 @@
       profile: "Profile",
       composerHint: "Share something good with the village",
       composerPlaceholder: "What are you thinking? Share wishes, help, a photo link, or a village memory...",
+      uploadMedia: "Photo/video upload",
+      removeMedia: "Remove",
+      mediaReady: "Media ready",
+      mediaLoading: "Media loading...",
+      mediaUnsupported: "This file is not supported. Choose a photo or video.",
+      mediaTooLarge: "The file is too large. Choose a smaller photo or video.",
+      mediaLocalOnly: "File saved on this device.",
       post: "Post",
       friendsEyebrow: "Friends",
       friendsTitle: "Friends and requests",
@@ -291,6 +340,8 @@
       seeAnswer: "See answer",
       riddleAnswer: "Happiness and knowledge.",
       profileTitle: "Your profile",
+      profilePhoto: "Profile photo upload",
+      removePhoto: "Remove photo",
       name: "Name",
       bio: "Bio",
       saveProfile: "Save profile",
@@ -326,6 +377,7 @@
       noRequests: "No requests",
       categoryUpdate: "Update",
       categoryPhoto: "Photo",
+      categoryVideo: "Video",
       categoryFestival: "Festival",
       categoryHelp: "Help",
       categoryFun: "Fun",
@@ -340,12 +392,16 @@
       welcome: "Welcome, ",
       postFailed: "Post was not saved.",
       postAdded: "Post added",
+      postNeedsContent: "Add text, a photo, a video, or a URL before posting.",
       likeFailed: "Like was not saved.",
       shareFailed: "Share failed.",
       postShared: "Post shared",
       commentFailed: "Comment was not saved.",
       profileFailed: "Profile was not saved.",
       profileSaved: "Profile saved",
+      photoReady: "Profile photo ready",
+      avatarAlt: "Profile photo",
+      videoAlt: "Post video",
       requestFailed: "Request was not sent.",
       requestSentToast: "Friend request sent",
       requestUpdateFailed: "Request was not updated.",
@@ -382,6 +438,13 @@
   function setPlaceholder(selector, key) {
     const node = $(selector);
     if (node) node.placeholder = tr(key);
+  }
+
+  function setFieldLabel(formSelector, fieldName, key) {
+    const input = document.querySelector(`${formSelector} [name="${fieldName}"]`);
+    const label = input ? input.closest("label") : null;
+    const span = label ? label.querySelector("span") : null;
+    if (span) span.textContent = tr(key);
   }
 
   function applyLanguage() {
@@ -430,6 +493,8 @@
     setAllText("[data-view='profile']", "profile");
     setText(".composer-head span", "composerHint");
     setPlaceholder("#postForm textarea", "composerPlaceholder");
+    setText("#postMediaLabel", "uploadMedia");
+    setText("#clearPostMedia", "removeMedia");
     setText("#postForm button[type='submit']", "post");
     document.querySelectorAll("#postForm option").forEach((option) => {
       option.textContent = categoryLabel(option.value);
@@ -458,10 +523,12 @@
     setText("#answerButton", "seeAnswer");
     setText("#riddleAnswer", "riddleAnswer");
     setText("#profileView h1", "profileTitle");
-    setText("#profileForm label:nth-of-type(1) span", "name");
-    setText("#profileForm label:nth-of-type(2) span", "area");
-    setText("#profileForm label:nth-of-type(3) span", "profession");
-    setText("#profileForm label:nth-of-type(4) span", "bio");
+    setText("#profilePhotoLabel", "profilePhoto");
+    setText("#clearProfilePhoto", "removePhoto");
+    setFieldLabel("#profileForm", "name", "name");
+    setFieldLabel("#profileForm", "village", "area");
+    setFieldLabel("#profileForm", "profession", "profession");
+    setFieldLabel("#profileForm", "bio", "bio");
     setText("#profileForm button[type='submit']", "saveProfile");
     setText(".right-rail .side-panel:nth-child(1) h2", "chaupalToday");
     setText(".right-rail .side-panel:nth-child(1) button", "postAnswer");
@@ -505,7 +572,11 @@
     });
     $("#logoutButton").addEventListener("click", logout);
     $("#postForm").addEventListener("submit", handlePost);
+    $("#postMediaFile").addEventListener("change", handlePostMediaSelect);
+    $("#clearPostMedia").addEventListener("click", clearPostMedia);
     $("#profileForm").addEventListener("submit", handleProfile);
+    $("#profilePhotoInput").addEventListener("change", handleProfilePhotoSelect);
+    $("#clearProfilePhoto").addEventListener("click", clearProfilePhoto);
     $("#memberSearch").addEventListener("input", renderMembers);
     $("#globalSearch").addEventListener("input", () => {
       renderFeed();
@@ -631,18 +702,169 @@
     toast(tr("welcome") + state.user.name);
   }
 
+  async function handlePostMediaSelect(event) {
+    const file = event.currentTarget.files && event.currentTarget.files[0];
+    if (!file) return;
+    const pending = await prepareMediaFile(file, "post");
+    if (!pending) {
+      event.currentTarget.value = "";
+      return;
+    }
+    revokePending(state.pendingPostMedia);
+    state.pendingPostMedia = pending;
+    const category = $("#postForm").elements.category;
+    if (pending.type.startsWith("image/")) category.value = "photo";
+    if (pending.type.startsWith("video/")) category.value = "video";
+    renderMediaPreview("#postMediaPreview", pending, tr("mediaReady"));
+    $("#clearPostMedia").hidden = false;
+  }
+
+  async function handleProfilePhotoSelect(event) {
+    const file = event.currentTarget.files && event.currentTarget.files[0];
+    if (!file) return;
+    const pending = await prepareMediaFile(file, "avatar");
+    if (!pending) {
+      event.currentTarget.value = "";
+      return;
+    }
+    revokePending(state.pendingAvatar);
+    state.pendingAvatar = pending;
+    state.avatarRemove = false;
+    renderProfilePreview(pending);
+    $("#clearProfilePhoto").hidden = false;
+    toast(tr("photoReady"));
+  }
+
+  function clearPostMedia() {
+    revokePending(state.pendingPostMedia);
+    state.pendingPostMedia = null;
+    $("#postMediaFile").value = "";
+    $("#postMediaPreview").hidden = true;
+    $("#postMediaPreview").innerHTML = "";
+    $("#clearPostMedia").hidden = true;
+  }
+
+  function clearProfilePhoto() {
+    revokePending(state.pendingAvatar);
+    state.pendingAvatar = null;
+    state.avatarRemove = true;
+    $("#profilePhotoInput").value = "";
+    setAvatarNode($("#profilePhotoPreview"), { name: state.user ? state.user.name : "K" });
+    $("#clearProfilePhoto").hidden = true;
+  }
+
+  async function prepareMediaFile(file, kind) {
+    const isImage = /^image\//.test(file.type);
+    const isVideo = /^video\//.test(file.type);
+    if ((kind === "avatar" && !isImage) || (kind === "post" && !isImage && !isVideo)) {
+      toast(tr("mediaUnsupported"));
+      return null;
+    }
+    if (isImage && file.size > (kind === "avatar" ? maxAvatarBytes : maxImageBytes)) {
+      toast(tr("mediaTooLarge"));
+      return null;
+    }
+    if (isVideo && file.size > maxVideoBytes) {
+      toast(tr("mediaTooLarge"));
+      return null;
+    }
+
+    if (isImage) {
+      return compressImage(file, kind === "avatar" ? 520 : 1400, kind === "avatar" ? 0.82 : 0.86);
+    }
+
+    return {
+      blob: file,
+      type: file.type || "video/mp4",
+      name: file.name || "video",
+      size: file.size,
+      previewUrl: URL.createObjectURL(file)
+    };
+  }
+
+  async function compressImage(file, maxSide, quality) {
+    const imageUrl = URL.createObjectURL(file);
+    try {
+      const image = await loadImage(imageUrl);
+      const scale = Math.min(1, maxSide / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
+      const width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+      const height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, width, height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+      if (!blob) throw new Error("Image compression failed");
+      return {
+        blob,
+        type: "image/jpeg",
+        name: (file.name || "photo").replace(/\.[^.]+$/, "") + ".jpg",
+        size: blob.size,
+        previewUrl: URL.createObjectURL(blob)
+      };
+    } catch (error) {
+      toast(tr("mediaUnsupported"));
+      return null;
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
+  }
+
+  function loadImage(url) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = url;
+    });
+  }
+
+  function renderMediaPreview(selector, pending, label) {
+    const node = $(selector);
+    if (!node || !pending) return;
+    const media = pending.type.startsWith("video/")
+      ? `<video src="${escapeAttr(pending.previewUrl)}" controls preload="metadata"></video>`
+      : `<img src="${escapeAttr(pending.previewUrl)}" alt="${escapeAttr(label)}">`;
+    node.innerHTML = `${media}<small>${escapeHtml(label)} | ${escapeHtml(formatBytes(pending.size))}</small>`;
+    node.hidden = false;
+  }
+
+  function renderProfilePreview(pending) {
+    const node = $("#profilePhotoPreview");
+    if (!node || !pending) return;
+    node.classList.add("has-photo");
+    node.innerHTML = `<img src="${escapeAttr(pending.previewUrl)}" alt="${escapeAttr(tr("avatarAlt"))}">`;
+  }
+
   async function handlePost(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const content = form.content.value.trim();
-    if (!content) return;
+    const mediaUrl = form.mediaUrl.value.trim();
+    const pending = state.pendingPostMedia;
+    if (!content && !mediaUrl && !pending) {
+      toast(tr("postNeedsContent"));
+      return;
+    }
+
+    let storedMedia = {};
+    try {
+      storedMedia = pending ? await storePendingMedia(pending) : {};
+    } catch (error) {
+      toast(tr("postFailed"));
+      return;
+    }
 
     const result = await request({
       action: "social_post",
       token: state.token,
       content,
       category: form.category.value,
-      mediaUrl: form.mediaUrl.value.trim()
+      mediaUrl,
+      mediaType: storedMedia.mediaType || "",
+      mediaName: storedMedia.mediaName || "",
+      mediaLocalId: storedMedia.mediaLocalId || ""
     });
 
     if (!result.ok) {
@@ -651,6 +873,7 @@
     }
 
     form.reset();
+    clearPostMedia();
     updateSnapshot(result);
     toast(tr("postAdded"));
   }
@@ -698,16 +921,29 @@
   async function handleProfile(event) {
     event.preventDefault();
     const form = event.currentTarget;
+    let storedAvatar = {};
+    try {
+      storedAvatar = state.pendingAvatar ? await storePendingMedia(state.pendingAvatar) : {};
+    } catch (error) {
+      toast(tr("profileFailed"));
+      return;
+    }
     const result = await request({
       action: "social_profile_update",
       token: state.token,
       name: form.name.value.trim(),
       village: form.village.value.trim(),
       profession: form.profession.value.trim(),
-      bio: form.bio.value.trim()
+      bio: form.bio.value.trim(),
+      avatarRemove: state.avatarRemove ? "yes" : "",
+      avatarLocalId: storedAvatar.mediaLocalId || "",
+      avatarType: storedAvatar.mediaType || "",
+      avatarName: storedAvatar.mediaName || ""
     });
     if (!result.ok) return toast(result.error || tr("profileFailed"));
     state.user = result.user;
+    state.pendingAvatar = null;
+    state.avatarRemove = false;
     updateSnapshot(result);
     toast(tr("profileSaved"));
   }
@@ -813,6 +1049,10 @@
         village: payload.village || "Kapoorpur",
         profession: payload.profession || "",
         bio: "",
+        avatarUrl: "",
+        avatarLocalId: "",
+        avatarType: "",
+        avatarName: "",
         createdAt: now,
         lastLogin: now,
         status: ""
@@ -852,6 +1092,9 @@
         content: payload.content.slice(0, 700),
         category: payload.category || "update",
         mediaUrl: payload.mediaUrl || "",
+        mediaType: payload.mediaType || "",
+        mediaName: payload.mediaName || "",
+        mediaLocalId: payload.mediaLocalId || "",
         createdAt: now,
         status: ""
       });
@@ -869,6 +1112,9 @@
         content: `${state.lang === "en" ? "Shared from" : "इनसे शेयर किया"} ${author.name}:\n${original.content}`.slice(0, 700),
         category: "update",
         mediaUrl: original.mediaUrl || "",
+        mediaType: original.mediaType || "",
+        mediaName: original.mediaName || "",
+        mediaLocalId: original.mediaLocalId || "",
         createdAt: now,
         status: ""
       });
@@ -912,6 +1158,17 @@
       user.village = payload.village || "";
       user.profession = payload.profession || "";
       user.bio = payload.bio || "";
+      if (payload.avatarRemove) {
+        user.avatarUrl = "";
+        user.avatarLocalId = "";
+        user.avatarType = "";
+        user.avatarName = "";
+      } else if (payload.avatarLocalId) {
+        user.avatarUrl = "";
+        user.avatarLocalId = payload.avatarLocalId;
+        user.avatarType = payload.avatarType || "";
+        user.avatarName = payload.avatarName || "";
+      }
       saveDemoData(data);
       return loginResponse(user, payload.token, data);
     }
@@ -992,8 +1249,10 @@
 
   function hydrateUser() {
     const initial = initials(state.user.name);
-    $("#sideAvatar").textContent = initial;
-    $("#composerAvatar").textContent = initial;
+    setAvatarNode($("#sideAvatar"), state.user);
+    setAvatarNode($("#composerAvatar"), state.user);
+    setAvatarNode($("#profilePhotoPreview"), state.user);
+    $("#clearProfilePhoto").hidden = !hasAvatar(state.user);
     $("#sideName").textContent = state.user.name;
     $("#composerName").textContent = state.user.name;
     $("#sideMeta").textContent = [state.user.village, state.user.profession].filter(Boolean).join(" | ") || "Kapoorpur";
@@ -1044,6 +1303,7 @@
     document.querySelectorAll("[data-comment-form]").forEach((form) => {
       form.addEventListener("submit", (event) => handleComment(event, form.dataset.commentForm));
     });
+    hydrateLocalMedia();
   }
 
   function renderPost(post) {
@@ -1051,12 +1311,12 @@
     const reactions = activeItems(state.data.reactions).filter((item) => item.postId === post.postId);
     const comments = activeItems(state.data.comments).filter((item) => item.postId === post.postId);
     const liked = reactions.some((item) => item.userId === state.user.userId && item.type === "like");
-    const image = safeMedia(post.mediaUrl);
+    const media = renderPostMedia(post);
 
     return `
       <article class="post-card">
         <div class="post-head">
-          <div class="avatar">${escapeHtml(initials(user.name))}</div>
+          ${avatarMarkup(user)}
           <div>
             <h3>${escapeHtml(user.name)}</h3>
             <small>${timeAgo(post.createdAt)} | ${escapeHtml(categoryLabel(post.category))}</small>
@@ -1064,7 +1324,7 @@
         </div>
         <div class="post-body">
           ${escapeHtml(post.content)}
-          ${image ? `<a class="post-media" href="${escapeAttr(image)}" target="_blank" rel="noopener"><img src="${escapeAttr(image)}" alt="${escapeAttr(tr("postMediaAlt"))}" loading="lazy"></a>` : ""}
+          ${media}
         </div>
         <div class="post-actions">
           <button type="button" class="${liked ? "active" : ""}" data-like="${escapeAttr(post.postId)}">${escapeHtml(tr("like"))} ${reactions.length}</button>
@@ -1117,6 +1377,7 @@
       .slice(0, 8);
     $("#suggestionGrid").innerHTML = suggestions.length ? suggestions.map((user) => renderUserCard(user)).join("") : `<p class="empty-state">${escapeHtml(tr("emptySuggestions"))}</p>`;
     bindMemberButtons();
+    hydrateLocalMedia();
   }
 
   function renderMembers() {
@@ -1129,6 +1390,7 @@
 
     $("#memberGrid").innerHTML = users.length ? users.map((user) => renderUserCard(user)).join("") : `<p class="empty-state">${escapeHtml(tr("emptyMembers"))}</p>`;
     bindMemberButtons();
+    hydrateLocalMedia();
   }
 
   function renderUserCard(user) {
@@ -1149,7 +1411,7 @@
 
     return `
       <article class="member-card">
-        <div class="avatar">${escapeHtml(initials(user.name))}</div>
+        ${avatarMarkup(user)}
         <div>
           <h2>${escapeHtml(user.name)}</h2>
           <p>${escapeHtml([user.profession, user.village].filter(Boolean).join(" | ") || "Kapoorpur")}</p>
@@ -1185,7 +1447,7 @@
       const latest = messagesWith(id).slice(-1)[0];
       return `
         <button type="button" class="conversation-item ${state.chatUserId === id ? "active" : ""}" data-conversation="${escapeAttr(id)}">
-          <div class="avatar">${escapeHtml(initials(user.name))}</div>
+          ${avatarMarkup(user)}
           <div>
             <strong>${escapeHtml(user.name)}</strong>
             <p class="muted">${escapeHtml(latest ? latest.content : tr("sendMessage"))}</p>
@@ -1199,6 +1461,7 @@
     });
 
     if (state.chatUserId) openChat(state.chatUserId, true);
+    hydrateLocalMedia();
   }
 
   function openChat(userId, skipRenderList) {
@@ -1435,6 +1698,10 @@
       village: user.village,
       profession: user.profession,
       bio: user.bio,
+      avatarUrl: user.avatarUrl || "",
+      avatarLocalId: user.avatarLocalId || "",
+      avatarType: user.avatarType || "",
+      avatarName: user.avatarName || "",
       createdAt: user.createdAt,
       status: user.status
     };
@@ -1464,10 +1731,216 @@
     return ["hidden", "deleted"].includes(String(item.status || "").toLowerCase());
   }
 
+  function avatarMarkup(user) {
+    const remote = safeMedia(user.avatarUrl);
+    const localId = user.avatarLocalId || "";
+    if (remote) {
+      return `<div class="avatar has-photo"><img src="${escapeAttr(remote)}" alt="${escapeAttr(tr("avatarAlt"))}" loading="lazy"></div>`;
+    }
+    if (localId) {
+      return `<div class="avatar has-photo" data-avatar-local-id="${escapeAttr(localId)}">${escapeHtml(initials(user.name))}</div>`;
+    }
+    return `<div class="avatar">${escapeHtml(initials(user.name))}</div>`;
+  }
+
+  function setAvatarNode(node, user) {
+    if (!node) return;
+    const remote = safeMedia(user.avatarUrl);
+    const localId = user.avatarLocalId || "";
+    node.removeAttribute("data-avatar-local-id");
+    node.classList.toggle("has-photo", Boolean(remote || localId));
+    if (remote) {
+      node.innerHTML = `<img src="${escapeAttr(remote)}" alt="${escapeAttr(tr("avatarAlt"))}">`;
+      return;
+    }
+    if (localId) {
+      node.dataset.avatarLocalId = localId;
+      node.textContent = initials(user.name);
+      hydrateLocalMedia();
+      return;
+    }
+    node.textContent = initials(user.name);
+  }
+
+  function hasAvatar(user) {
+    return Boolean(user && (safeMedia(user.avatarUrl) || user.avatarLocalId));
+  }
+
+  function renderPostMedia(post) {
+    const localId = post.mediaLocalId || "";
+    const remote = safeMedia(post.mediaUrl);
+    const type = post.mediaType || inferMediaType(remote);
+    if (localId) {
+      return `<div class="post-media loading" data-media-local-id="${escapeAttr(localId)}" data-media-type="${escapeAttr(type)}">${escapeHtml(tr("mediaLoading"))}</div>`;
+    }
+    if (!remote) return "";
+    if (isVideoType(type, remote)) {
+      return `<div class="post-media"><video src="${escapeAttr(remote)}" controls preload="metadata">${escapeHtml(tr("videoAlt"))}</video></div>`;
+    }
+    return `<a class="post-media" href="${escapeAttr(remote)}" target="_blank" rel="noopener"><img src="${escapeAttr(remote)}" alt="${escapeAttr(tr("postMediaAlt"))}" loading="lazy"></a>`;
+  }
+
+  async function storePendingMedia(pending) {
+    if (!pending || !pending.blob) return {};
+    const id = "media_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    await putMediaRecord({
+      id,
+      blob: pending.blob,
+      type: pending.type,
+      name: pending.name,
+      size: pending.size,
+      ownerId: state.user ? state.user.userId : "",
+      createdAt: new Date().toISOString()
+    });
+    return {
+      mediaLocalId: id,
+      mediaType: pending.type,
+      mediaName: pending.name
+    };
+  }
+
+  function hydrateLocalMedia() {
+    document.querySelectorAll("[data-media-local-id]").forEach(async (node) => {
+      if (node.dataset.hydrated === "yes") return;
+      const record = await getMediaRecord(node.dataset.mediaLocalId);
+      if (!record || (!record.blob && !record.dataUrl)) return;
+      node.dataset.hydrated = "yes";
+      node.classList.remove("loading");
+      const url = record.dataUrl || URL.createObjectURL(record.blob);
+      if (isVideoType(record.type, record.name)) {
+        node.innerHTML = `<video src="${escapeAttr(url)}" controls preload="metadata">${escapeHtml(tr("videoAlt"))}</video>`;
+      } else {
+        node.innerHTML = `<img src="${escapeAttr(url)}" alt="${escapeAttr(tr("postMediaAlt"))}" loading="lazy">`;
+      }
+    });
+
+    document.querySelectorAll("[data-avatar-local-id]").forEach(async (node) => {
+      if (node.dataset.avatarHydrated === "yes") return;
+      const record = await getMediaRecord(node.dataset.avatarLocalId);
+      if (!record || (!record.blob && !record.dataUrl)) return;
+      node.dataset.avatarHydrated = "yes";
+      node.classList.add("has-photo");
+      const url = record.dataUrl || URL.createObjectURL(record.blob);
+      node.innerHTML = `<img src="${escapeAttr(url)}" alt="${escapeAttr(tr("avatarAlt"))}" loading="lazy">`;
+    });
+  }
+
+  function openMediaDb() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        reject(new Error("IndexedDB is not available"));
+        return;
+      }
+      const request = indexedDB.open(mediaDbName, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(mediaStoreName)) {
+          db.createObjectStore(mediaStoreName, { keyPath: "id" });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("Media database error"));
+    });
+  }
+
+  async function putMediaRecord(record) {
+    if (!window.indexedDB) return putMediaRecordFallback(record);
+    const db = await openMediaDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(mediaStoreName, "readwrite");
+      tx.objectStore(mediaStoreName).put(record);
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      tx.onerror = () => {
+        db.close();
+        reject(tx.error || new Error("Media save failed"));
+      };
+    });
+  }
+
+  async function getMediaRecord(id) {
+    if (!id) return null;
+    try {
+      if (!window.indexedDB) return getMediaRecordFallback(id);
+      const db = await openMediaDb();
+      return await new Promise((resolve) => {
+        const tx = db.transaction(mediaStoreName, "readonly");
+        const request = tx.objectStore(mediaStoreName).get(id);
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => resolve(null);
+        tx.oncomplete = () => db.close();
+      });
+    } catch (error) {
+      return getMediaRecordFallback(id);
+    }
+  }
+
+  async function putMediaRecordFallback(record) {
+    const dataUrl = await blobToDataUrl(record.blob);
+    const saved = readFallbackMedia();
+    saved[record.id] = {
+      id: record.id,
+      type: record.type,
+      name: record.name,
+      size: record.size,
+      ownerId: record.ownerId,
+      createdAt: record.createdAt,
+      dataUrl
+    };
+    localStorage.setItem(mediaFallbackKey, JSON.stringify(saved));
+  }
+
+  function getMediaRecordFallback(id) {
+    return readFallbackMedia()[id] || null;
+  }
+
+  function readFallbackMedia() {
+    try {
+      const value = JSON.parse(localStorage.getItem(mediaFallbackKey) || "{}");
+      return value && typeof value === "object" ? value : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error || new Error("Media read failed"));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function revokePending(pending) {
+    if (pending && pending.previewUrl) URL.revokeObjectURL(pending.previewUrl);
+  }
+
+  function inferMediaType(value) {
+    const lower = String(value || "").toLowerCase();
+    if (/\.(mp4|webm|ogg|mov)(\?|#|$)/.test(lower)) return "video/mp4";
+    if (/\.(jpg|jpeg|png|gif|webp)(\?|#|$)/.test(lower)) return "image/jpeg";
+    return "";
+  }
+
+  function isVideoType(type, value) {
+    return /^video\//.test(String(type || "")) || /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(String(value || ""));
+  }
+
+  function formatBytes(value) {
+    const size = Number(value || 0);
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   function categoryLabel(value) {
     return {
       update: tr("categoryUpdate"),
       photo: tr("categoryPhoto"),
+      video: tr("categoryVideo"),
       festival: tr("categoryFestival"),
       help: tr("categoryHelp"),
       fun: tr("categoryFun")
