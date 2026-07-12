@@ -7,8 +7,10 @@
     token: sessionStorage.getItem("gramKapoorpurAdminToken") || "",
     unlocked: sessionStorage.getItem("gramKapoorpurAdminGate") === "yes",
     activeSheet: "users",
-    data: {}
+    data: {},
+    dataMode: ""
   };
+  const localSocialKey = "gramKapoorpurSocialDemo";
   const adminMobile = "7619559629";
   const adminGateSalt = "kapoorpur-social-admin-mobile-v1";
   const adminGateHash = "39d38aa7c42d42a59f793838ba137cc693dafc698d384dea27c8c0bd0bbd4c88";
@@ -119,6 +121,16 @@
     }
   };
 
+  const localSources = {
+    users: "users",
+    socialPosts: "posts",
+    socialComments: "comments",
+    socialReactions: "reactions",
+    socialFriends: "friendships",
+    socialMessages: "messages",
+    sessions: "sessions"
+  };
+
   const labels = {
     title_hi: "Hindi title",
     title_en: "English title",
@@ -186,6 +198,7 @@
     renderForm();
     renderTable();
     renderGate();
+    if (state.unlocked) loadData();
   }
 
   function bindEvents() {
@@ -226,6 +239,7 @@
       sessionStorage.setItem("gramKapoorpurAdminGate", "yes");
       document.getElementById("adminGateForm").reset();
       renderGate();
+      loadData();
       return;
     }
     setGateStatus("Mobile number or password is wrong.", "bad");
@@ -245,7 +259,11 @@
   }
 
   async function loadData() {
-    if (!requireSettings()) return;
+    if (!hasSharedSettings()) {
+      loadLocalData();
+      return;
+    }
+
     setStatus("Loading admin data...", "");
 
     const result = await api("admin_list", {
@@ -258,6 +276,7 @@
     }
 
     state.data = result.data || {};
+    state.dataMode = "shared";
     setStatus("Admin data loaded.", "good");
     renderStats();
     renderTable();
@@ -265,7 +284,10 @@
 
   async function saveRow(event) {
     event.preventDefault();
-    if (!requireSettings()) return;
+    if (state.dataMode === "local" || !hasSharedSettings()) {
+      saveLocalRow();
+      return;
+    }
 
     const sheetKey = document.getElementById("editingSheet").value || state.activeSheet;
     const sheet = sheets[sheetKey];
@@ -296,7 +318,11 @@
   }
 
   async function hideRow(sheetKey, rowNumber) {
-    if (!requireSettings()) return;
+    if (state.dataMode === "local" || !hasSharedSettings()) {
+      hideLocalRow(sheetKey, rowNumber);
+      return;
+    }
+
     const label = sheets[sheetKey].rowName;
     if (!window.confirm(`Hide this ${label}?`)) return;
 
@@ -311,7 +337,11 @@
   }
 
   async function deleteRow(sheetKey, rowNumber) {
-    if (!requireSettings()) return;
+    if (state.dataMode === "local" || !hasSharedSettings()) {
+      deleteLocalRow(sheetKey, rowNumber);
+      return;
+    }
+
     const label = sheets[sheetKey].rowName;
     if (!window.confirm(`Permanently delete this ${label}? This cannot be undone.`)) return;
 
@@ -383,15 +413,129 @@
 
   function requireSettings() {
     saveSettings();
-    if (!state.endpoint) {
-      setStatus("Add your Apps Script Web App URL first.", "bad");
-      return false;
+    if (hasSharedSettings()) return true;
+    setStatus("Showing local browser data. Add Apps Script URL and admin token to see all villagers.", "good");
+    return false;
+  }
+
+  function hasSharedSettings() {
+    return Boolean(state.endpoint && state.token);
+  }
+
+  function loadLocalData() {
+    state.data = localAdminData();
+    state.dataMode = "local";
+    renderStats();
+    resetForm();
+    renderTable();
+    const users = rowCount("users");
+    if (users) {
+      setStatus(`Showing ${users} local account(s) saved in this browser. Connect Google Sheet backend to see everyone.`, "good");
+    } else {
+      setStatus("No local social accounts found in this browser. Create/login on the social page here, or connect Google Sheet backend.", "bad");
     }
-    if (!state.token) {
-      setStatus("Enter your private admin token.", "bad");
-      return false;
+  }
+
+  function localAdminData() {
+    const local = readLocalSocialData();
+    return Object.keys(sheets).reduce((data, sheetKey) => {
+      const sheet = sheets[sheetKey];
+      const sourceKey = localSources[sheetKey];
+      const sourceRows = Array.isArray(local[sourceKey]) ? local[sourceKey] : [];
+      data[sheetKey] = {
+        headers: sheet.fields.slice(),
+        rows: sourceRows.map((object, index) => ({
+          rowNumber: index + 2,
+          object: normalizeRowObject(object, sheet.fields)
+        }))
+      };
+      return data;
+    }, {});
+  }
+
+  function normalizeRowObject(object, fields) {
+    return fields.reduce((row, field) => {
+      row[field] = object && object[field] !== undefined ? object[field] : "";
+      return row;
+    }, {});
+  }
+
+  function readLocalSocialData() {
+    const fallback = {
+      users: [],
+      posts: [],
+      comments: [],
+      reactions: [],
+      friendships: [],
+      messages: [],
+      sessions: []
+    };
+    try {
+      const saved = JSON.parse(localStorage.getItem(localSocialKey) || "{}");
+      return Object.assign(fallback, saved && typeof saved === "object" ? saved : {});
+    } catch (error) {
+      return fallback;
     }
-    return true;
+  }
+
+  function writeLocalSocialData(data) {
+    localStorage.setItem(localSocialKey, JSON.stringify(data));
+    state.data = localAdminData();
+    renderStats();
+    renderTable();
+  }
+
+  function saveLocalRow() {
+    const sheetKey = document.getElementById("editingSheet").value || state.activeSheet;
+    const sheet = sheets[sheetKey];
+    const sourceKey = localSources[sheetKey];
+    if (!sheet || !sourceKey || !sheet.editable) return;
+
+    const data = readLocalSocialData();
+    const rows = Array.isArray(data[sourceKey]) ? data[sourceKey] : [];
+    data[sourceKey] = rows;
+
+    const values = {};
+    sheet.fields.forEach((field) => {
+      values[field] = document.getElementById(`field_${field}`).value.trim();
+    });
+
+    const rowNumber = Number(document.getElementById("editingRow").value || 0);
+    const index = rowNumber >= 2 ? rowNumber - 2 : -1;
+    if (index >= 0 && rows[index]) {
+      rows[index] = Object.assign({}, rows[index], values);
+    } else {
+      rows.push(values);
+    }
+
+    writeLocalSocialData(data);
+    resetForm();
+    setStatus("Local browser row saved. It is visible only on this device until Google Sheet backend is connected.", "good");
+  }
+
+  function hideLocalRow(sheetKey, rowNumber) {
+    const label = sheets[sheetKey].rowName;
+    if (!window.confirm(`Hide this local ${label}?`)) return;
+    const data = readLocalSocialData();
+    const sourceKey = localSources[sheetKey];
+    const rows = Array.isArray(data[sourceKey]) ? data[sourceKey] : [];
+    const index = Number(rowNumber) - 2;
+    if (rows[index]) rows[index].status = "hidden";
+    writeLocalSocialData(data);
+    setStatus("Local row hidden.", "good");
+  }
+
+  function deleteLocalRow(sheetKey, rowNumber) {
+    const label = sheets[sheetKey].rowName;
+    if (!window.confirm(`Permanently delete this local ${label}? This cannot be undone.`)) return;
+    const data = readLocalSocialData();
+    const sourceKey = localSources[sheetKey];
+    const rows = Array.isArray(data[sourceKey]) ? data[sourceKey] : [];
+    const index = Number(rowNumber) - 2;
+    if (index >= 0) rows.splice(index, 1);
+    data[sourceKey] = rows;
+    writeLocalSocialData(data);
+    setStatus("Local row deleted.", "good");
   }
 
   function renderTabs() {
