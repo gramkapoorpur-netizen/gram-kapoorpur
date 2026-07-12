@@ -148,11 +148,20 @@
               <span>गांव में कुछ अच्छा शेयर करें</span>
             </div>
           </div>
-          <textarea name="content" rows="4" maxlength="700" placeholder="क्या सोच रहे हैं? शुभकामना, मदद, फोटो लिंक या गांव की याद लिखें..." required></textarea>
+          <textarea name="content" rows="4" maxlength="700" placeholder="क्या सोच रहे हैं? शुभकामना, मदद, फोटो लिंक या गांव की याद लिखें..."></textarea>
+          <div class="media-tools">
+            <label class="file-picker">
+              <span id="postMediaLabel">Photo/video upload</span>
+              <input id="postMediaFile" name="mediaFile" type="file" accept="image/*,video/*">
+            </label>
+            <button type="button" class="ghost-button" id="clearPostMedia" hidden>Remove</button>
+          </div>
+          <div id="postMediaPreview" class="media-preview" hidden></div>
           <div class="composer-row">
             <select name="category" aria-label="Post category">
               <option value="update">Update</option>
               <option value="photo">Photo</option>
+              <option value="video">Video</option>
               <option value="festival">Festival</option>
               <option value="help">Help</option>
               <option value="fun">Fun</option>
@@ -258,6 +267,16 @@
           </div>
         </div>
         <form class="profile-form" id="profileForm">
+          <div class="profile-photo-editor">
+            <div class="avatar profile-photo-preview" id="profilePhotoPreview">क</div>
+            <div class="profile-photo-actions">
+              <label class="file-picker">
+                <span id="profilePhotoLabel">Profile photo upload</span>
+                <input id="profilePhotoInput" name="avatarFile" type="file" accept="image/*">
+              </label>
+              <button type="button" class="ghost-button" id="clearProfilePhoto" hidden>Remove</button>
+            </div>
+          </div>
           <label>
             <span>नाम</span>
             <input name="name" type="text" required>
