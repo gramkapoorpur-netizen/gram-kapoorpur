@@ -23,7 +23,31 @@
     <a class="site-link" href="index.html">Open Social</a>
   </header>
 
-  <main class="admin-shell">
+  <main class="admin-shell" id="adminGate">
+    <section class="panel setup-panel">
+      <div>
+        <p class="eyebrow">Admin login</p>
+        <h1>Mobile number access</h1>
+        <p class="muted">Admin panel Manoj Singh Sikarwar ke mobile number se open hoga.</p>
+      </div>
+      <form id="adminGateForm" class="settings-grid">
+        <label>
+          <span>Mobile number</span>
+          <input id="adminMobileInput" type="tel" inputmode="tel" autocomplete="tel" placeholder="+917619559629" required>
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="adminPasswordInput" type="password" autocomplete="current-password" required>
+        </label>
+        <div class="button-row">
+          <button type="submit">Open admin</button>
+        </div>
+        <p class="status-line" id="adminGateStatus" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <main class="admin-shell" id="adminApp" hidden>
     <section class="panel setup-panel" aria-labelledby="setupTitle">
       <div>
         <p class="eyebrow">Secure access</p>
